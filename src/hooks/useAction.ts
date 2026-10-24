@@ -1,10 +1,14 @@
 import { useCallback, useState } from 'react';
 import { RepositoryError } from '../db/repository';
+import { UserFacingError } from '../lib/errors';
 import { strings } from '../lib/strings';
 
 function messageFor(error: unknown): string {
   if (error instanceof RepositoryError) {
     return strings.errors[error.code];
+  }
+  if (error instanceof UserFacingError) {
+    return error.message;
   }
   return strings.errors.storage;
 }

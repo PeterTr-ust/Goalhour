@@ -12,6 +12,7 @@ import type { Item, ItemType } from '../lib/types';
 import { Button } from './Button';
 import { DurationFields, FIELD_CLASSES } from './DurationFields';
 import { Modal } from './Modal';
+import { SegmentedControl } from './SegmentedControl';
 
 interface ItemSheetProps {
   /** Item to edit, or undefined to add a new one. */
@@ -24,7 +25,10 @@ interface ItemSheetProps {
   onClose: () => void;
 }
 
-const ITEM_TYPES: readonly ItemType[] = ['entry', 'credit'];
+const TYPE_OPTIONS: readonly { value: ItemType; label: string }[] = [
+  { value: 'entry', label: strings.itemTypes.entry },
+  { value: 'credit', label: strings.itemTypes.credit },
+];
 const EMPTY_DURATION: DurationInput = { hours: '', minutes: '' };
 
 export function ItemSheet({
@@ -93,35 +97,13 @@ export function ItemSheet({
       onClose={onClose}
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-        <fieldset>
-          <legend className="sr-only">{strings.sheet.type}</legend>
-          <div className="relative grid grid-cols-2 gap-1 rounded-2xl bg-surface p-1">
-            <span
-              aria-hidden="true"
-              className={`absolute inset-y-1 left-1 w-[calc(50%-0.375rem)] rounded-xl bg-fg shadow-sm transition-transform duration-300 ease-out ${
-                type === 'credit' ? 'translate-x-[calc(100%+0.25rem)]' : ''
-              }`}
-            />
-            {ITEM_TYPES.map((option) => (
-              <label
-                key={option}
-                className={`relative flex min-h-11 cursor-pointer items-center justify-center rounded-xl text-base font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-fg ${
-                  type === option ? 'text-bg' : 'text-muted'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="item-type"
-                  value={option}
-                  checked={type === option}
-                  onChange={() => setType(option)}
-                  className="sr-only"
-                />
-                {strings.itemTypes[option]}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <SegmentedControl
+          legend={strings.sheet.type}
+          hideLegend
+          options={TYPE_OPTIONS}
+          value={type}
+          onChange={setType}
+        />
 
         <div className="flex gap-3">
           <div className="min-w-0 flex-1">

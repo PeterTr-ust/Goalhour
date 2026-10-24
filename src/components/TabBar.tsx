@@ -1,31 +1,12 @@
 import type { ReactNode } from 'react';
 import { strings } from '../lib/strings';
+import { CalendarIcon, ClockIcon, PlusIcon } from './icons';
 
 export type Tab = 'month' | 'serviceYear';
 
-const ICON_PROPS = {
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-  'aria-hidden': true,
-} as const;
-
 const TAB_ICONS: Record<Tab, ReactNode> = {
-  month: (
-    <svg {...ICON_PROPS} className="size-6">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  ),
-  serviceYear: (
-    <svg {...ICON_PROPS} className="size-6">
-      <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
-      <path d="M3.5 10h17M8 3v4M16 3v4" />
-    </svg>
-  ),
+  month: <ClockIcon />,
+  serviceYear: <CalendarIcon />,
 };
 
 interface TabBarProps {
@@ -56,9 +37,7 @@ export function TabBar({ active, onChange, onAdd }: TabBarProps) {
               aria-label={strings.sheet.add}
               className="flex size-12 animate-pop-in items-center justify-center rounded-full bg-fg text-bg shadow-lg transition-transform duration-150 active:scale-90"
             >
-              <svg {...ICON_PROPS} strokeWidth={2.5} className="size-6">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
+              <PlusIcon />
             </button>
           )}
         </div>

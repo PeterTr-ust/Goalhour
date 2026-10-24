@@ -1,6 +1,6 @@
 import { monthKeyOf, nextMonth } from '../lib/calendar';
 import { buildClose, canCarryOver, summarizeMonth, type CloseChoice } from '../lib/month';
-import type { BackupContent, BackupFile } from '../lib/backup';
+import type { BackupFile } from '../lib/backup';
 import type { Item, MonthClose, MonthKey } from '../lib/types';
 import { db } from './database';
 
@@ -71,18 +71,6 @@ export async function setGoal(month: MonthKey, minutes: number): Promise<void> {
 
 export async function setYearGoal(startYear: number, minutes: number): Promise<void> {
   await db.yearGoals.put({ startYear, minutes });
-}
-
-export async function readBackupContent(): Promise<BackupContent> {
-  return db.transaction('r', db.items, db.goals, db.yearGoals, db.closes, async () => {
-    const [items, goals, yearGoals, closes] = await Promise.all([
-      db.items.toArray(),
-      db.goals.toArray(),
-      db.yearGoals.toArray(),
-      db.closes.toArray(),
-    ]);
-    return { items, goals, yearGoals, closes };
-  });
 }
 
 /** Replaces all stored data with the content of a validated backup, all or nothing. */

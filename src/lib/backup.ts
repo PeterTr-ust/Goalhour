@@ -12,10 +12,10 @@ const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 const CLOSE_MODES: readonly CloseMode[] = ['roundUp', 'carryOver', 'none'];
 
 export interface BackupContent {
-  items: Item[];
-  goals: MonthGoal[];
-  yearGoals: YearGoal[];
-  closes: MonthClose[];
+  items: readonly Item[];
+  goals: readonly MonthGoal[];
+  yearGoals: readonly YearGoal[];
+  closes: readonly MonthClose[];
 }
 
 export interface BackupFile extends BackupContent {

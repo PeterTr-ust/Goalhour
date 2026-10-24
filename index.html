@@ -16,6 +16,21 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Goalhour</title>
+    <script>
+      // Apply the saved theme before the first paint to avoid a light/dark flash.
+      // Keep the storage key in sync with THEME_STORAGE_KEY in src/lib/theme.ts.
+      (function () {
+        var preference = null;
+        try {
+          preference = localStorage.getItem('goalhour.theme');
+        } catch (error) {
+          preference = null;
+        }
+        var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var dark = preference === 'dark' || (preference !== 'light' && systemDark);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -29,10 +29,12 @@ interface MonthViewProps {
   month: MonthKey;
   data: MonthData;
   onMonthChange: (month: MonthKey) => void;
+  /** Called after an item was deleted, e.g. to offer undo. */
+  onItemDeleted: (item: Item) => void;
   run: RunAction;
 }
 
-export function MonthView({ month, data, onMonthChange, run }: MonthViewProps) {
+export function MonthView({ month, data, onMonthChange, onItemDeleted, run }: MonthViewProps) {
   const [panel, setPanel] = useState<OpenPanel>({ kind: 'none' });
   const closePanel = () => setPanel({ kind: 'none' });
 
@@ -92,7 +94,14 @@ export function MonthView({ month, data, onMonthChange, run }: MonthViewProps) {
           defaultDate={panel.item.date}
           defaultTime={panel.item.time ?? ''}
           onSave={(input) => run(() => updateItem(panel.item.id, input))}
-          onDelete={(id) => run(() => deleteItem(id))}
+          onDelete={(id) =>
+            run(async () => {
+              const deleted = await deleteItem(id);
+              if (deleted) {
+                onItemDeleted(deleted);
+              }
+            })
+          }
           onClose={closePanel}
         />
       )}

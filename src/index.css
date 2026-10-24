@@ -1,8 +1,12 @@
 @import 'tailwindcss';
 
-/* Monochrome palette: white in light mode, black in dark mode. */
+/*
+ * Monochrome palette: white in light mode, black in dark mode. Color is reserved for status
+ * (red = goal open, green = goal met / month closed). The active theme is set as
+ * data-theme on <html> (see index.html and useTheme), resolving "automatic" to the system.
+ */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   -webkit-tap-highlight-color: transparent;
   --app-bg: #ffffff;
   --app-surface: #f4f4f5;
@@ -13,20 +17,23 @@
   --app-muted: #5f5f66;
   --app-subtle: #a1a1aa;
   --app-danger: #b91c1c;
+  --app-success: #15803d;
+  --app-on-status: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --app-bg: #000000;
-    --app-surface: #141414;
-    --app-surface-strong: #232323;
-    --app-line: #262626;
-    --app-elevated: #1c1c1e;
-    --app-fg: #fafafa;
-    --app-muted: #a1a1aa;
-    --app-subtle: #52525b;
-    --app-danger: #f87171;
-  }
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --app-bg: #000000;
+  --app-surface: #141414;
+  --app-surface-strong: #232323;
+  --app-line: #262626;
+  --app-elevated: #1c1c1e;
+  --app-fg: #fafafa;
+  --app-muted: #a1a1aa;
+  --app-subtle: #52525b;
+  --app-danger: #f87171;
+  --app-success: #4ade80;
+  --app-on-status: #000000;
 }
 
 @theme inline {
@@ -39,6 +46,8 @@
   --color-muted: var(--app-muted);
   --color-subtle: var(--app-subtle);
   --color-danger: var(--app-danger);
+  --color-success: var(--app-success);
+  --color-on-status: var(--app-on-status);
 
   --animate-fade-up: fade-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 240ms ease-out both;

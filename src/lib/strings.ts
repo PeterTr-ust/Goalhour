@@ -1,3 +1,4 @@
+import type { BackupError } from './backup';
 import type { DurationError } from './duration';
 import { parseMonthKey } from './calendar';
 import { formatServiceYear } from './serviceYear';
@@ -26,6 +27,15 @@ export function formatMonth(key: MonthKey): string {
 
 export function formatMonthName(key: MonthKey): string {
   return monthNameFormatter.format(monthToDate(key));
+}
+
+const dateTimeFormatter = new Intl.DateTimeFormat(LOCALE, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+export function formatDateTime(timestamp: number): string {
+  return dateTimeFormatter.format(new Date(timestamp));
 }
 
 export function formatDate(isoDate: string): string {
@@ -98,6 +108,9 @@ export const strings = {
     title: 'Monatsziel',
     description: (month: string) =>
       `Gilt für ${month} und alle folgenden Monate ohne eigenes Ziel.`,
+    yearTitle: 'Jahresziel',
+    yearDescription: (serviceYear: string) =>
+      `Gilt für das Dienstjahr ${serviceYear} und alle folgenden Dienstjahre ohne eigenes Ziel.`,
   },
   closeDialog: {
     title: 'Monat abschließen',
@@ -122,6 +135,47 @@ export const strings = {
     closed: 'abgeschlossen',
     noValue: '–',
     openMonth: (month: string) => `${month} öffnen`,
+    entries: 'Einträge',
+    credits: 'Gutschriften',
+    balance: 'Übertrag/Aufrundung',
+    total: 'Gesamt',
+    breakdown: (entries: string, credits: string) => `Einträge ${entries} · Gutschr. ${credits}`,
+    yearGoal: 'Jahresziel',
+    setYearGoal: 'Jahresziel festlegen',
+    editYearGoal: (value: string) => `Jahresziel ${value}, ändern`,
+    progress: 'Fortschritt zum Jahresziel',
+  },
+  settings: {
+    open: 'Einstellungen',
+    title: 'Einstellungen',
+    appearance: 'Darstellung',
+    themes: { system: 'Automatisch', light: 'Hell', dark: 'Dunkel' },
+    backupTitle: 'Datensicherung',
+    backupInfo:
+      'Deine Daten liegen nur auf diesem Gerät. Wird die App gelöscht, sind sie ohne Backup verloren. Speichere das Backup zum Beispiel in iCloud Drive.',
+    lastBackup: (date: string) => `Letztes Backup: ${date}`,
+    noBackup: 'Noch kein Backup erstellt.',
+    createBackup: 'Backup erstellen',
+    restoreBackup: 'Backup wiederherstellen',
+    backupDone: 'Backup erstellt.',
+    restoreDone: 'Backup wiederhergestellt.',
+    close: 'Fertig',
+  },
+  restore: {
+    title: 'Backup wiederherstellen',
+    summary: (date: string, items: number, months: number) =>
+      `Backup vom ${date}: ${items} ${items === 1 ? 'Eintrag oder Gutschrift' : 'Einträge und Gutschriften'}, ${months} ${months === 1 ? 'abgeschlossener Monat' : 'abgeschlossene Monate'}.`,
+    warning: 'Alle aktuellen Daten auf diesem Gerät werden dadurch ersetzt.',
+    confirm: 'Ersetzen und wiederherstellen',
+  },
+  reminder: {
+    never: 'Du hast noch kein Backup erstellt.',
+    overdue: (days: number) => `Dein letztes Backup ist ${days} Tage alt.`,
+    action: 'Jetzt sichern',
+  },
+  undo: {
+    deleted: (label: string) => `${label} gelöscht`,
+    action: 'Rückgängig',
   },
   errors: {
     title: 'Fehler',
@@ -130,6 +184,14 @@ export const strings = {
     nextMonthClosed: 'Der Folgemonat ist abgeschlossen. Bitte zuerst diesen wieder öffnen.',
     storage: 'Speichern fehlgeschlagen. Bitte erneut versuchen.',
     load: 'Daten konnten nicht geladen werden.',
+    backupExport: 'Das Backup konnte nicht erstellt werden.',
+    backupRead: 'Die Datei konnte nicht gelesen werden.',
+    backup: {
+      invalidJson: 'Die Datei ist kein gültiges Backup (kein JSON).',
+      notABackup: 'Die Datei ist kein Goalhour-Backup.',
+      unsupportedVersion: 'Dieses Backup stammt aus einer neueren App-Version.',
+      invalidData: 'Das Backup enthält fehlerhafte Daten und wurde nicht übernommen.',
+    } satisfies Record<BackupError, string>,
     duration: {
       invalidNumber: 'Bitte ganze Zahlen eingeben.',
       minutesOutOfRange: 'Minuten müssen zwischen 0 und 59 liegen.',
