@@ -21,6 +21,12 @@ export interface MonthGoal {
   minutes: number;
 }
 
+export interface YearGoal {
+  /** Calendar year in which the service year starts (September). */
+  startYear: number;
+  minutes: number;
+}
+
 export type CloseMode = 'roundUp' | 'carryOver' | 'none';
 
 export interface MonthClose {
