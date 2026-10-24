@@ -14,7 +14,6 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['apple-touch-icon.png'],
       manifest: {
         name: 'Goalhour',
         short_name: 'Goalhour',
@@ -25,8 +24,10 @@ export default defineConfig({
         theme_color: THEME_COLOR,
         background_color: BACKGROUND_COLOR,
         icons: [
-          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
@@ -36,6 +37,5 @@ export default defineConfig({
   ],
   test: {
     include: ['src/**/*.test.ts'],
-    passWithNoTests: true,
   },
 });
