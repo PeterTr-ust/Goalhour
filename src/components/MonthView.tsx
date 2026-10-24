@@ -1,0 +1,171 @@
+import { useState } from 'react';
+import {
+  addItem,
+  closeMonth,
+  deleteItem,
+  reopenMonth,
+  setGoal,
+  updateItem,
+} from '../db/repository';
+import { defaultDateForMonth, nextMonth, previousMonth, toTimeString } from '../lib/calendar';
+import { buildListRows } from '../lib/listRows';
+import {
+  canCarryOver,
+  canReopen,
+  needsCloseChoice,
+  summarizeMonth,
+  type CloseChoice,
+  type MonthData,
+} from '../lib/month';
+import { formatMonth, strings } from '../lib/strings';
+import type { Item, MonthKey } from '../lib/types';
+import { Button } from './Button';
+import { CloseMonthDialog } from './CloseMonthDialog';
+import { GoalDialog } from './GoalDialog';
+import { ItemList } from './ItemList';
+import { ItemSheet } from './ItemSheet';
+import { MonthSummaryCard } from './MonthSummaryCard';
+import { PeriodNavigator } from './PeriodNavigator';
+
+type RunAction = (action: () => Promise<unknown>) => Promise<boolean>;
+
+type OpenPanel =
+  | { kind: 'none' }
+  | { kind: 'addItem'; defaultDate: string; defaultTime: string }
+  | { kind: 'editItem'; item: Item }
+  | { kind: 'goal' }
+  | { kind: 'close' };
+
+interface MonthViewProps {
+  month: MonthKey;
+  data: MonthData;
+  onMonthChange: (month: MonthKey) => void;
+  run: RunAction;
+}
+
+export function MonthView({ month, data, onMonthChange, run }: MonthViewProps) {
+  const [panel, setPanel] = useState<OpenPanel>({ kind: 'none' });
+  const closePanel = () => setPanel({ kind: 'none' });
+
+  const summary = summarizeMonth(month, data);
+  const isClosed = summary.close !== undefined;
+  const rows = buildListRows(summary, data.items);
+
+  const handleCloseMonth = () => {
+    if (needsCloseChoice(summary.raw)) {
+      setPanel({ kind: 'close' });
+      return;
+    }
+    // A full hour total needs no choice; the stored mode becomes 'none'.
+    void run(() => closeMonth(month, 'roundUp'));
+  };
+
+  const handleCloseChoice = (choice: CloseChoice) => {
+    closePanel();
+    void run(() => closeMonth(month, choice));
+  };
+
+  const openAddSheet = () => {
+    const now = new Date();
+    setPanel({
+      kind: 'addItem',
+      defaultDate: defaultDateForMonth(month, now),
+      defaultTime: toTimeString(now),
+    });
+  };
+
+  return (
+    <>
+      <div className="flex flex-col gap-4">
+        <PeriodNavigator
+          label={formatMonth(month)}
+          previousLabel={strings.month.previous}
+          nextLabel={strings.month.next}
+          onPrevious={() => onMonthChange(previousMonth(month))}
+          onNext={() => onMonthChange(nextMonth(month))}
+        />
+
+        <MonthSummaryCard summary={summary} onEditGoal={() => setPanel({ kind: 'goal' })} />
+
+        {isClosed ? (
+          <ReopenSection
+            allowed={canReopen(data.closes, month)}
+            onReopen={() => void run(() => reopenMonth(month))}
+          />
+        ) : (
+          <Button onClick={handleCloseMonth}>{strings.month.closeMonth}</Button>
+        )}
+
+        <ItemList
+          rows={rows}
+          locked={isClosed}
+          onSelect={(item) => setPanel({ kind: 'editItem', item })}
+        />
+      </div>
+
+      {!isClosed && (
+        <button
+          type="button"
+          onClick={openAddSheet}
+          aria-label={strings.sheet.add}
+          className="fixed right-5 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-10 flex size-16 items-center justify-center rounded-full bg-teal-700 text-4xl leading-none text-white shadow-lg active:bg-teal-800"
+        >
+          <span aria-hidden="true">+</span>
+        </button>
+      )}
+
+      {panel.kind === 'addItem' && (
+        <ItemSheet
+          item={undefined}
+          defaultDate={panel.defaultDate}
+          defaultTime={panel.defaultTime}
+          onSave={(input) => run(() => addItem(input))}
+          onClose={closePanel}
+        />
+      )}
+      {panel.kind === 'editItem' && (
+        <ItemSheet
+          item={panel.item}
+          defaultDate={panel.item.date}
+          defaultTime={panel.item.time ?? ''}
+          onSave={(input) => run(() => updateItem(panel.item.id, input))}
+          onDelete={(id) => run(() => deleteItem(id))}
+          onClose={closePanel}
+        />
+      )}
+      {panel.kind === 'goal' && (
+        <GoalDialog
+          month={month}
+          currentGoal={summary.goal}
+          onSave={(minutes) => run(() => setGoal(month, minutes))}
+          onClose={closePanel}
+        />
+      )}
+      {panel.kind === 'close' && (
+        <CloseMonthDialog
+          month={month}
+          raw={summary.raw}
+          carryOverAllowed={canCarryOver(data.closes, month)}
+          onChoose={handleCloseChoice}
+          onClose={closePanel}
+        />
+      )}
+    </>
+  );
+}
+
+function ReopenSection({ allowed, onReopen }: { allowed: boolean; onReopen: () => void }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="px-1 text-sm text-slate-600 dark:text-slate-400">{strings.month.lockedHint}</p>
+      <Button variant="secondary" disabled={!allowed} onClick={onReopen}>
+        {strings.month.reopen}
+      </Button>
+      {!allowed && (
+        <p className="px-1 text-sm text-slate-600 dark:text-slate-400">
+          {strings.month.reopenBlocked}
+        </p>
+      )}
+    </div>
+  );
+}
