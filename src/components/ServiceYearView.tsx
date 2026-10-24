@@ -1,19 +1,38 @@
-import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
+import { useState } from 'react';
+import { setYearGoal } from '../db/repository';
+import type { StoredData } from '../hooks/useStoredData';
 import { formatDuration, formatSignedDuration } from '../lib/duration';
-import { goalProgress } from '../lib/goal';
-import type { MonthData, MonthSummary } from '../lib/month';
-import { goalDifference, summarizeServiceYear } from '../lib/serviceYear';
+import { goalProgress, goalStatus, goalTone, type GoalTone } from '../lib/goal';
+import type { MonthSummary } from '../lib/month';
+import {
+  formatServiceYear,
+  goalDifference,
+  summarizeServiceYear,
+  type ServiceYearSummary,
+} from '../lib/serviceYear';
 import { formatMonth, formatMonthName, strings } from '../lib/strings';
 import type { MonthKey } from '../lib/types';
+import { GoalDialog } from './GoalDialog';
+import { GoalButton, GoalHeadline, SummaryRow } from './GoalOverview';
 import { PeriodNavigator } from './PeriodNavigator';
+import { StatusBadge } from './StatusBadge';
+
+type RunAction = (action: () => Promise<unknown>) => Promise<boolean>;
 
 const STAGGER_MS = 30;
 
+const TONE_BARS: Record<GoalTone, string> = {
+  neutral: 'bg-fg',
+  open: 'bg-danger',
+  met: 'bg-success',
+};
+
 interface ServiceYearViewProps {
   startYear: number;
-  data: MonthData;
+  data: StoredData;
   onYearChange: (startYear: number) => void;
   onOpenMonth: (month: MonthKey) => void;
+  run: RunAction;
 }
 
 export function ServiceYearView({
@@ -21,9 +40,10 @@ export function ServiceYearView({
   data,
   onYearChange,
   onOpenMonth,
+  run,
 }: ServiceYearViewProps) {
+  const [editingGoal, setEditingGoal] = useState(false);
   const summary = summarizeServiceYear(startYear, data);
-  const shownTotal = Math.round(useAnimatedNumber(summary.total));
 
   return (
     <div className="flex flex-col gap-4">
@@ -35,15 +55,7 @@ export function ServiceYearView({
         onNext={() => onYearChange(startYear + 1)}
       />
 
-      <section aria-label={strings.serviceYear.yearTotal} className="rounded-3xl bg-surface p-5">
-        <p className="text-sm text-muted">{strings.serviceYear.yearTotal}</p>
-        <p
-          className="text-5xl font-bold tracking-tight tabular-nums"
-          aria-label={formatDuration(summary.total)}
-        >
-          {formatDuration(shownTotal)}
-        </p>
-      </section>
+      <YearSummaryCard summary={summary} onEditGoal={() => setEditingGoal(true)} />
 
       {/* Keyed by year so the rows animate in when switching years. */}
       <ul key={startYear} className="divide-y divide-line overflow-hidden rounded-3xl bg-surface">
@@ -57,14 +69,65 @@ export function ServiceYearView({
           </li>
         ))}
       </ul>
+
+      {editingGoal && (
+        <GoalDialog
+          title={strings.goalDialog.yearTitle}
+          description={strings.goalDialog.yearDescription(formatServiceYear(startYear))}
+          currentGoal={summary.goal}
+          onSave={(minutes) => run(() => setYearGoal(startYear, minutes))}
+          onClose={() => setEditingGoal(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function YearSummaryCard({
+  summary,
+  onEditGoal,
+}: {
+  summary: ServiceYearSummary;
+  onEditGoal: () => void;
+}) {
+  return (
+    <section aria-label={strings.serviceYear.yearTotal} className="rounded-3xl bg-surface p-5">
+      <GoalHeadline
+        caption={strings.serviceYear.yearTotal}
+        progressLabel={strings.serviceYear.progress}
+        total={summary.total}
+        goal={summary.goal}
+      />
+      <dl className="mt-5 divide-y divide-line text-base">
+        <SummaryRow label={strings.serviceYear.entries} value={formatDuration(summary.entries)} />
+        <SummaryRow label={strings.serviceYear.credits} value={formatDuration(summary.credits)} />
+        {summary.balance !== 0 && (
+          <SummaryRow
+            label={strings.serviceYear.balance}
+            value={formatSignedDuration(summary.balance)}
+          />
+        )}
+        <SummaryRow
+          label={strings.serviceYear.total}
+          value={formatDuration(summary.total)}
+          strong
+        />
+      </dl>
+      <GoalButton
+        label={strings.serviceYear.yearGoal}
+        goal={summary.goal}
+        setLabel={strings.serviceYear.setYearGoal}
+        editLabel={strings.serviceYear.editYearGoal}
+        onClick={onEditGoal}
+      />
+    </section>
   );
 }
 
 function MonthRow({ summary, onOpen }: { summary: MonthSummary; onOpen: () => void }) {
   const difference = goalDifference(summary);
-  const isClosed = summary.close !== undefined;
   const progress = goalProgress(summary.goal, summary.total);
+  const tone = goalTone(goalStatus(summary.goal, summary.total));
   const { noValue } = strings.serviceYear;
 
   return (
@@ -77,24 +140,30 @@ function MonthRow({ summary, onOpen }: { summary: MonthSummary; onOpen: () => vo
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex items-center gap-2">
           <span className="font-semibold">{formatMonthName(summary.month)}</span>
-          <span
-            className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${
-              isClosed ? 'border-fg bg-fg text-bg' : 'border-line text-muted'
-            }`}
-          >
-            {isClosed ? strings.serviceYear.closed : strings.serviceYear.open}
-          </span>
+          <StatusBadge closed={summary.close !== undefined} />
+        </span>
+        <span className="text-sm text-muted tabular-nums">
+          {strings.serviceYear.breakdown(
+            formatDuration(summary.entries),
+            formatDuration(summary.credits),
+          )}
         </span>
         <span className="text-sm text-muted tabular-nums">
           {strings.serviceYear.goal}{' '}
           {summary.goal === undefined ? noValue : formatDuration(summary.goal)} ·{' '}
           {strings.serviceYear.difference}{' '}
-          {difference === undefined ? noValue : formatSignedDuration(difference)}
+          {difference === undefined ? (
+            noValue
+          ) : (
+            <span className={difference < 0 ? 'text-danger' : 'text-success'}>
+              {formatSignedDuration(difference)}
+            </span>
+          )}
         </span>
         {summary.goal !== undefined && (
           <span aria-hidden="true" className="mt-1 h-1 w-full overflow-hidden rounded-full bg-line">
             <span
-              className="block h-full origin-left rounded-full bg-fg transition-transform duration-700 ease-out"
+              className={`block h-full origin-left rounded-full transition-transform duration-700 ease-out ${TONE_BARS[tone]}`}
               style={{ transform: `scaleX(${progress})` }}
             />
           </span>

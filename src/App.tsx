@@ -109,6 +109,7 @@ export function App() {
             data={data}
             onYearChange={setServiceYear}
             onOpenMonth={openMonth}
+            run={run}
           />
         )}
       </main>

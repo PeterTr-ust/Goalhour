@@ -6,20 +6,21 @@ import {
   validateGoal,
   type DurationInput,
 } from '../lib/duration';
-import { formatMonth, strings } from '../lib/strings';
-import type { MonthKey } from '../lib/types';
+import { strings } from '../lib/strings';
 import { Button } from './Button';
 import { DurationFields } from './DurationFields';
 import { Modal } from './Modal';
 
 interface GoalDialogProps {
-  month: MonthKey;
+  title: string;
+  description: string;
   currentGoal: number | undefined;
   onSave: (minutes: number) => Promise<boolean>;
   onClose: () => void;
 }
 
-export function GoalDialog({ month, currentGoal, onSave, onClose }: GoalDialogProps) {
+/** Edits a monthly or yearly goal in hours and minutes. */
+export function GoalDialog({ title, description, currentGoal, onSave, onClose }: GoalDialogProps) {
   const [value, setValue] = useState<DurationInput>(
     currentGoal === undefined ? { hours: '', minutes: '' } : toDurationInput(currentGoal),
   );
@@ -39,15 +40,10 @@ export function GoalDialog({ month, currentGoal, onSave, onClose }: GoalDialogPr
   };
 
   return (
-    <Modal title={strings.goalDialog.title} onClose={onClose}>
+    <Modal title={title} onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-        <p className="text-sm text-muted">{strings.goalDialog.description(formatMonth(month))}</p>
-        <DurationFields
-          legend={strings.goalDialog.title}
-          value={value}
-          onChange={setValue}
-          error={error}
-        />
+        <p className="text-sm text-muted">{description}</p>
+        <DurationFields legend={title} value={value} onChange={setValue} error={error} />
         <div className="flex flex-col gap-3">
           <Button type="submit">{strings.sheet.save}</Button>
           <Button variant="secondary" onClick={onClose}>

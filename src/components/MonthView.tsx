@@ -107,7 +107,8 @@ export function MonthView({ month, data, onMonthChange, onItemDeleted, run }: Mo
       )}
       {panel.kind === 'goal' && (
         <GoalDialog
-          month={month}
+          title={strings.goalDialog.title}
+          description={strings.goalDialog.description(formatMonth(month))}
           currentGoal={summary.goal}
           onSave={(minutes) => run(() => setGoal(month, minutes))}
           onClose={closePanel}
