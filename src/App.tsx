@@ -53,7 +53,7 @@ export function App() {
   const canAdd = data !== undefined && tab === 'month' && !isMonthClosed(data.closes, month);
 
   return (
-    <div className="min-h-full pt-[calc(env(safe-area-inset-top)+0.75rem)] pr-[max(env(safe-area-inset-right),1rem)] pb-[calc(env(safe-area-inset-bottom)+6.5rem)] pl-[max(env(safe-area-inset-left),1rem)]">
+    <div className="min-h-full pt-[calc(env(safe-area-inset-top)+0.75rem)] pr-[max(env(safe-area-inset-right),1rem)] pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pl-[max(env(safe-area-inset-left),1rem)]">
       <main key={tab} className="mx-auto max-w-xl animate-fade-in">
         {data && tab === 'month' && (
           <MonthView month={month} data={data} onMonthChange={setMonth} run={run} />
