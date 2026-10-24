@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const BASE_PATH = '/Goalhour/';
-const THEME_COLOR = '#0f766e';
-const BACKGROUND_COLOR = '#f8fafc';
+const THEME_COLOR = '#ffffff';
+const BACKGROUND_COLOR = '#ffffff';
 
 export default defineConfig({
   base: BASE_PATH,

@@ -11,38 +11,43 @@ interface ItemListProps {
 
 type Tone = 'entry' | 'credit' | 'adjust';
 
+/** Types differ by fill style (solid, outline, dashed) and label, not by hue. */
 const TONE_CLASSES: Record<Tone, { bar: string; badge: string }> = {
   entry: {
-    bar: 'bg-entry',
-    badge: 'bg-teal-100 text-teal-900 dark:bg-teal-900 dark:text-teal-100',
+    bar: 'bg-fg',
+    badge: 'border-fg bg-fg text-bg',
   },
   credit: {
-    bar: 'bg-credit',
-    badge: 'bg-violet-100 text-violet-900 dark:bg-violet-900 dark:text-violet-100',
+    bar: 'border-2 border-fg',
+    badge: 'border-fg text-fg',
   },
   adjust: {
-    bar: 'bg-adjust',
-    badge: 'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100',
+    bar: 'border-2 border-dashed border-muted',
+    badge: 'border-dashed border-muted text-muted',
   },
 };
+
+const STAGGER_MS = 35;
+const MAX_STAGGER_MS = 350;
 
 export function ItemList({ rows, locked, onSelect }: ItemListProps) {
   return (
     <section aria-labelledby="item-list-title">
-      <h2
-        id="item-list-title"
-        className="mb-2 px-1 text-sm font-semibold text-slate-600 dark:text-slate-400"
-      >
+      <h2 id="item-list-title" className="mb-2 px-1 text-sm font-semibold text-muted">
         {strings.month.listTitle}
       </h2>
       {rows.length === 0 ? (
-        <p className="rounded-3xl bg-white p-5 text-center text-slate-600 dark:bg-slate-900 dark:text-slate-400">
+        <p className="animate-fade-in rounded-3xl bg-surface p-5 text-center text-muted">
           {strings.month.emptyList}
         </p>
       ) : (
-        <ul className="divide-y divide-slate-200 overflow-hidden rounded-3xl bg-white shadow-sm dark:divide-slate-800 dark:bg-slate-900">
-          {rows.map((row) => (
-            <li key={rowKey(row)}>
+        <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-surface">
+          {rows.map((row, index) => (
+            <li
+              key={rowKey(row)}
+              className="animate-fade-up"
+              style={{ animationDelay: `${Math.min(index * STAGGER_MS, MAX_STAGGER_MS)}ms` }}
+            >
               <Row row={row} locked={locked} onSelect={onSelect} />
             </li>
           ))}
@@ -69,10 +74,10 @@ function RowContent({ tone, label, detail, value }: RowContentProps) {
     <span className="flex min-h-16 items-center gap-3 py-2 pr-4">
       <span className={`h-10 w-1.5 shrink-0 rounded-full ${classes.bar}`} aria-hidden="true" />
       <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${classes.badge}`}>
+        <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${classes.badge}`}>
           {label}
         </span>
-        <span className="truncate text-sm text-slate-600 dark:text-slate-400">{detail}</span>
+        <span className="truncate text-sm text-muted">{detail}</span>
       </span>
       <span className="text-lg font-semibold tabular-nums">{value}</span>
     </span>
@@ -104,7 +109,7 @@ function Row({
           type="button"
           onClick={() => onSelect(item)}
           aria-label={strings.list.edit(label, date, value)}
-          className="w-full pl-3 text-left active:bg-slate-100 dark:active:bg-slate-800"
+          className="w-full pl-3 text-left transition-colors active:bg-surface-strong"
         >
           {content}
         </button>

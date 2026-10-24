@@ -95,12 +95,18 @@ export function ItemSheet({
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
         <fieldset>
           <legend className="sr-only">{strings.sheet.type}</legend>
-          <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-200 p-1 dark:bg-slate-800">
+          <div className="relative grid grid-cols-2 gap-1 rounded-2xl bg-surface p-1">
+            <span
+              aria-hidden="true"
+              className={`absolute inset-y-1 left-1 w-[calc(50%-0.375rem)] rounded-xl bg-fg shadow-sm transition-transform duration-300 ease-out ${
+                type === 'credit' ? 'translate-x-[calc(100%+0.25rem)]' : ''
+              }`}
+            />
             {ITEM_TYPES.map((option) => (
               <label
                 key={option}
-                className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl text-base font-medium has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-teal-600 ${
-                  type === option ? 'bg-white shadow-sm dark:bg-slate-600' : ''
+                className={`relative flex min-h-11 cursor-pointer items-center justify-center rounded-xl text-base font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-fg ${
+                  type === option ? 'text-bg' : 'text-muted'
                 }`}
               >
                 <input
@@ -118,7 +124,7 @@ export function ItemSheet({
         </fieldset>
 
         <div className="flex gap-3">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <label htmlFor={dateId} className="mb-1 block text-sm">
               {strings.sheet.date}
             </label>
@@ -134,7 +140,7 @@ export function ItemSheet({
             />
           </div>
           {type === 'entry' && (
-            <div className="flex-1">
+            <div className="min-w-0 flex-1 animate-fade-in">
               <label htmlFor={timeId} className="mb-1 block text-sm">
                 {strings.sheet.time}
               </label>
@@ -149,7 +155,7 @@ export function ItemSheet({
           )}
         </div>
         {dateError && (
-          <p id={dateErrorId} role="alert" className="-mt-3 text-sm text-red-700 dark:text-red-400">
+          <p id={dateErrorId} role="alert" className="-mt-3 animate-fade-in text-sm text-danger">
             {dateError}
           </p>
         )}

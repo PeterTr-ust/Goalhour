@@ -28,9 +28,7 @@ export function CloseMonthDialog({
 
   return (
     <Modal title={strings.closeDialog.title} onClose={onClose}>
-      <p className="mb-5 text-sm text-slate-600 dark:text-slate-400">
-        {strings.closeDialog.description(from)}
-      </p>
+      <p className="mb-5 text-sm text-muted">{strings.closeDialog.description(from)}</p>
       <div className="flex flex-col gap-3">
         <ChoiceButton
           label={strings.closeDialog.roundUp}
@@ -77,10 +75,10 @@ function ChoiceButton({ label, preview, disabled = false, onClick }: ChoiceButto
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="flex min-h-16 flex-col items-start rounded-2xl border-2 border-teal-700 px-4 py-3 text-left active:bg-teal-50 disabled:border-slate-300 disabled:text-slate-500 dark:active:bg-teal-950 dark:disabled:border-slate-700"
+      className="flex min-h-16 flex-col items-start rounded-2xl border-2 border-fg px-4 py-3 text-left transition-[transform,background-color] duration-150 active:scale-[0.98] active:bg-surface disabled:border-line disabled:text-muted disabled:active:scale-100"
     >
       <span className="text-base font-semibold">{label}</span>
-      <span className="text-sm text-slate-600 dark:text-slate-400">{preview}</span>
+      <span className="text-sm text-muted">{preview}</span>
     </button>
   );
 }

@@ -9,7 +9,7 @@ export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
   return (
     <div
       role="alert"
-      className="fixed inset-x-4 top-[calc(env(safe-area-inset-top)+0.5rem)] z-50 mx-auto flex max-w-xl items-center gap-3 rounded-2xl bg-red-700 p-4 text-white shadow-lg"
+      className="fixed inset-x-4 top-[calc(env(safe-area-inset-top)+0.5rem)] z-50 mx-auto flex max-w-xl animate-fade-up items-center gap-3 rounded-2xl bg-red-700 p-4 text-white shadow-lg"
     >
       <p className="flex-1 text-sm">
         <span className="sr-only">{strings.errors.title}: </span>

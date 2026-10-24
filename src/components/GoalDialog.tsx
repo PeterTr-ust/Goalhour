@@ -41,9 +41,7 @@ export function GoalDialog({ month, currentGoal, onSave, onClose }: GoalDialogPr
   return (
     <Modal title={strings.goalDialog.title} onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          {strings.goalDialog.description(formatMonth(month))}
-        </p>
+        <p className="text-sm text-muted">{strings.goalDialog.description(formatMonth(month))}</p>
         <DurationFields
           legend={strings.goalDialog.title}
           value={value}

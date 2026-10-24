@@ -1,13 +1,6 @@
 import { useState } from 'react';
-import {
-  addItem,
-  closeMonth,
-  deleteItem,
-  reopenMonth,
-  setGoal,
-  updateItem,
-} from '../db/repository';
-import { defaultDateForMonth, nextMonth, previousMonth, toTimeString } from '../lib/calendar';
+import { closeMonth, deleteItem, reopenMonth, setGoal, updateItem } from '../db/repository';
+import { nextMonth, previousMonth } from '../lib/calendar';
 import { buildListRows } from '../lib/listRows';
 import {
   canCarryOver,
@@ -30,11 +23,7 @@ import { PeriodNavigator } from './PeriodNavigator';
 type RunAction = (action: () => Promise<unknown>) => Promise<boolean>;
 
 type OpenPanel =
-  | { kind: 'none' }
-  | { kind: 'addItem'; defaultDate: string; defaultTime: string }
-  | { kind: 'editItem'; item: Item }
-  | { kind: 'goal' }
-  | { kind: 'close' };
+  { kind: 'none' } | { kind: 'editItem'; item: Item } | { kind: 'goal' } | { kind: 'close' };
 
 interface MonthViewProps {
   month: MonthKey;
@@ -65,15 +54,6 @@ export function MonthView({ month, data, onMonthChange, run }: MonthViewProps) {
     void run(() => closeMonth(month, choice));
   };
 
-  const openAddSheet = () => {
-    const now = new Date();
-    setPanel({
-      kind: 'addItem',
-      defaultDate: defaultDateForMonth(month, now),
-      defaultTime: toTimeString(now),
-    });
-  };
-
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -96,33 +76,16 @@ export function MonthView({ month, data, onMonthChange, run }: MonthViewProps) {
           <Button onClick={handleCloseMonth}>{strings.month.closeMonth}</Button>
         )}
 
-        <ItemList
-          rows={rows}
-          locked={isClosed}
-          onSelect={(item) => setPanel({ kind: 'editItem', item })}
-        />
+        {/* Keyed by month so the list animates in when switching months. */}
+        <div key={month}>
+          <ItemList
+            rows={rows}
+            locked={isClosed}
+            onSelect={(item) => setPanel({ kind: 'editItem', item })}
+          />
+        </div>
       </div>
 
-      {!isClosed && (
-        <button
-          type="button"
-          onClick={openAddSheet}
-          aria-label={strings.sheet.add}
-          className="fixed right-5 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-10 flex size-16 items-center justify-center rounded-full bg-teal-700 text-4xl leading-none text-white shadow-lg active:bg-teal-800"
-        >
-          <span aria-hidden="true">+</span>
-        </button>
-      )}
-
-      {panel.kind === 'addItem' && (
-        <ItemSheet
-          item={undefined}
-          defaultDate={panel.defaultDate}
-          defaultTime={panel.defaultTime}
-          onSave={(input) => run(() => addItem(input))}
-          onClose={closePanel}
-        />
-      )}
       {panel.kind === 'editItem' && (
         <ItemSheet
           item={panel.item}
@@ -156,16 +119,12 @@ export function MonthView({ month, data, onMonthChange, run }: MonthViewProps) {
 
 function ReopenSection({ allowed, onReopen }: { allowed: boolean; onReopen: () => void }) {
   return (
-    <div className="flex flex-col gap-2">
-      <p className="px-1 text-sm text-slate-600 dark:text-slate-400">{strings.month.lockedHint}</p>
+    <div className="flex animate-fade-in flex-col gap-2">
+      <p className="px-1 text-sm text-muted">{strings.month.lockedHint}</p>
       <Button variant="secondary" disabled={!allowed} onClick={onReopen}>
         {strings.month.reopen}
       </Button>
-      {!allowed && (
-        <p className="px-1 text-sm text-slate-600 dark:text-slate-400">
-          {strings.month.reopenBlocked}
-        </p>
-      )}
+      {!allowed && <p className="px-1 text-sm text-muted">{strings.month.reopenBlocked}</p>}
     </div>
   );
 }

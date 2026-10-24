@@ -15,7 +15,7 @@ export function PeriodNavigator({
   onNext,
 }: PeriodNavigatorProps) {
   const arrowClasses =
-    'flex size-12 items-center justify-center rounded-full text-3xl leading-none text-teal-700 active:bg-slate-200 dark:text-teal-400 dark:active:bg-slate-800';
+    'flex size-12 items-center justify-center rounded-full text-3xl leading-none text-fg transition-[transform,background-color] duration-150 active:scale-90 active:bg-surface';
 
   return (
     <div className="flex items-center justify-between gap-2">
