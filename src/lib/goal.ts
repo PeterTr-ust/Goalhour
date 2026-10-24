@@ -1,4 +1,4 @@
-import type { MonthGoal, MonthKey } from './types';
+import type { MonthGoal, MonthKey, YearGoal } from './types';
 
 /**
  * Returns the goal for a month: its own goal if set, otherwise the goal of the latest
@@ -8,6 +8,20 @@ export function resolveGoal(month: MonthKey, goals: readonly MonthGoal[]): numbe
   let best: MonthGoal | undefined;
   for (const goal of goals) {
     if (goal.month <= month && (best === undefined || goal.month > best.month)) {
+      best = goal;
+    }
+  }
+  return best?.minutes;
+}
+
+/**
+ * Returns the goal for a service year: its own goal if set, otherwise the goal of the latest
+ * earlier service year that has one, otherwise undefined.
+ */
+export function resolveYearGoal(startYear: number, goals: readonly YearGoal[]): number | undefined {
+  let best: YearGoal | undefined;
+  for (const goal of goals) {
+    if (goal.startYear <= startYear && (best === undefined || goal.startYear > best.startYear)) {
       best = goal;
     }
   }
@@ -32,6 +46,20 @@ export function goalStatus(goal: number | undefined, total: number): GoalStatus 
     return { kind: 'reached' };
   }
   return { kind: 'exceeded', minutes: -remaining };
+}
+
+/** How a goal is shown: red while open, green once met, neutral without a goal. */
+export type GoalTone = 'neutral' | 'open' | 'met';
+
+export function goalTone(status: GoalStatus): GoalTone {
+  switch (status.kind) {
+    case 'noGoal':
+      return 'neutral';
+    case 'missing':
+      return 'open';
+    default:
+      return 'met';
+  }
 }
 
 /** Progress towards the goal between 0 and 1. A goal of zero counts as complete. */

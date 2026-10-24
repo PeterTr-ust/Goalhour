@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { goalProgress, goalStatus, resolveGoal } from './goal';
-import type { MonthGoal } from './types';
+import { goalProgress, goalStatus, goalTone, resolveGoal, resolveYearGoal } from './goal';
+import type { MonthGoal, YearGoal } from './types';
 
 const HOURS_50 = 3000;
 const HOURS_40 = 2400;
@@ -26,6 +26,24 @@ describe('resolveGoal', () => {
   });
 });
 
+describe('resolveYearGoal', () => {
+  const goals: YearGoal[] = [
+    { startYear: 2027, minutes: 36000 },
+    { startYear: 2025, minutes: 30000 },
+  ];
+
+  it('returns undefined before any year goal was set', () => {
+    expect(resolveYearGoal(2024, goals)).toBeUndefined();
+  });
+
+  it('uses the year’s own goal and carries it forward', () => {
+    expect(resolveYearGoal(2025, goals)).toBe(30000);
+    expect(resolveYearGoal(2026, goals)).toBe(30000);
+    expect(resolveYearGoal(2027, goals)).toBe(36000);
+    expect(resolveYearGoal(2030, goals)).toBe(36000);
+  });
+});
+
 describe('goalStatus', () => {
   it('shows the missing time (50:00 goal, 32:30 total -> 17:30)', () => {
     expect(goalStatus(HOURS_50, 1950)).toEqual({ kind: 'missing', minutes: 1050 });
@@ -41,6 +59,16 @@ describe('goalStatus', () => {
 
   it('handles a missing goal', () => {
     expect(goalStatus(undefined, 100)).toEqual({ kind: 'noGoal' });
+  });
+});
+
+describe('goalTone', () => {
+  it('is open (red) until the goal is reached, then met (green)', () => {
+    expect(goalTone(goalStatus(undefined, 100))).toBe('neutral');
+    expect(goalTone(goalStatus(HOURS_50, 0))).toBe('open');
+    expect(goalTone(goalStatus(HOURS_50, HOURS_50 - 1))).toBe('open');
+    expect(goalTone(goalStatus(HOURS_50, HOURS_50))).toBe('met');
+    expect(goalTone(goalStatus(HOURS_50, HOURS_50 + 1))).toBe('met');
   });
 });
 

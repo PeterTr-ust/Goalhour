@@ -1,6 +1,7 @@
 import { addMonths, parseMonthKey, toMonthKey } from './calendar';
+import { resolveYearGoal } from './goal';
 import { summarizeMonth, type MonthData, type MonthSummary } from './month';
-import type { MonthKey } from './types';
+import type { MonthKey, YearGoal } from './types';
 
 /** The service year starts on 1 September and ends on 31 August. */
 export const SERVICE_YEAR_START_MONTH = 9;
@@ -22,13 +23,38 @@ export function serviceYearMonths(startYear: number): MonthKey[] {
 
 export interface ServiceYearSummary {
   months: MonthSummary[];
+  /** Sum of the entries of all months. */
+  entries: number;
+  /** Sum of the credits of all months. */
+  credits: number;
+  /**
+   * Net effect of carry-overs and round-ups: carry-in into September, minus carry-out from
+   * August, plus all round-ups. total = entries + credits + balance.
+   */
+  balance: number;
   /** Sum of the month totals. */
   total: number;
+  goal: number | undefined;
 }
 
-export function summarizeServiceYear(startYear: number, data: MonthData): ServiceYearSummary {
+export function summarizeServiceYear(
+  startYear: number,
+  data: MonthData & { yearGoals: readonly YearGoal[] },
+): ServiceYearSummary {
   const months = serviceYearMonths(startYear).map((month) => summarizeMonth(month, data));
-  return { months, total: months.reduce((sum, month) => sum + month.total, 0) };
+  const sum = (pick: (month: MonthSummary) => number) =>
+    months.reduce((total, month) => total + pick(month), 0);
+  const entries = sum((month) => month.entries);
+  const credits = sum((month) => month.credits);
+  const total = sum((month) => month.total);
+  return {
+    months,
+    entries,
+    credits,
+    balance: total - entries - credits,
+    total,
+    goal: resolveYearGoal(startYear, data.yearGoals),
+  };
 }
 
 /** Difference between total and goal (positive = above goal), undefined without a goal. */

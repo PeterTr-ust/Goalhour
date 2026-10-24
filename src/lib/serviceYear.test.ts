@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { monthKeyOf } from './calendar';
 import type { MonthData } from './month';
+import type { YearGoal } from './types';
 import {
   formatServiceYear,
   goalDifference,
@@ -37,7 +38,7 @@ describe('serviceYearMonths', () => {
 });
 
 describe('summarizeServiceYear', () => {
-  const data: MonthData = {
+  const data: MonthData & { yearGoals: YearGoal[] } = {
     items: [
       { id: 'aug', type: 'entry', date: '2026-08-31', minutes: 615, createdAt: 1 },
       { id: 'sep', type: 'entry', date: '2026-09-01', minutes: 120, createdAt: 2 },
@@ -46,7 +47,38 @@ describe('summarizeServiceYear', () => {
     ],
     goals: [{ month: '2026-09', minutes: 600 }],
     closes: [{ month: '2026-08', mode: 'carryOver', adjustment: 15 }],
+    yearGoals: [{ startYear: 2025, minutes: 6000 }],
   };
+
+  it('splits entries and credits and explains the rest as balance', () => {
+    const summary = summarizeServiceYear(2026, data);
+    expect(summary.entries).toBe(150);
+    expect(summary.credits).toBe(45);
+    // 15 minutes carried in from August of the previous service year.
+    expect(summary.balance).toBe(15);
+    expect(summary.entries + summary.credits + summary.balance).toBe(summary.total);
+
+    const previous = summarizeServiceYear(2025, data);
+    expect(previous.entries).toBe(615);
+    // 15 minutes carried out of August into the next service year.
+    expect(previous.balance).toBe(-15);
+  });
+
+  it('includes round-ups in the balance', () => {
+    const roundedUp = {
+      ...data,
+      closes: [{ month: '2026-09', mode: 'roundUp' as const, adjustment: 45 }],
+    };
+    const summary = summarizeServiceYear(2026, roundedUp);
+    expect(summary.balance).toBe(45);
+    expect(summary.total).toBe(240);
+  });
+
+  it('resolves the year goal with carry-forward', () => {
+    expect(summarizeServiceYear(2025, data).goal).toBe(6000);
+    expect(summarizeServiceYear(2026, data).goal).toBe(6000);
+    expect(summarizeServiceYear(2024, data).goal).toBeUndefined();
+  });
 
   it('covers September to August with the carry-over from the previous year', () => {
     const summary = summarizeServiceYear(2026, data);
