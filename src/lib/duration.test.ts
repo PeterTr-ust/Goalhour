@@ -3,7 +3,9 @@ import {
   formatDuration,
   formatSignedDuration,
   isWholeHour,
+  parseDurationInput,
   splitMinutes,
+  toDurationInput,
   toMinutes,
   validateDuration,
   validateGoal,
@@ -64,6 +66,17 @@ describe('validateDuration', () => {
     expect(validateDuration({ hours: 0, minutes: 0 })).toBe('zero');
     expect(validateDuration({ hours: Number.NaN, minutes: 0 })).toBe('invalidNumber');
     expect(validateDuration({ hours: 1.5, minutes: 0 })).toBe('invalidNumber');
+  });
+});
+
+describe('parseDurationInput and toDurationInput', () => {
+  it('treats empty fields as zero and invalid text as NaN', () => {
+    expect(parseDurationInput({ hours: '2', minutes: '' })).toEqual({ hours: 2, minutes: 0 });
+    expect(parseDurationInput({ hours: 'x', minutes: '5' }).hours).toBeNaN();
+  });
+
+  it('converts minutes back into field text', () => {
+    expect(toDurationInput(125)).toEqual({ hours: '2', minutes: '5' });
   });
 });
 

@@ -39,6 +39,23 @@ export function isWholeHour(totalMinutes: number): boolean {
   return totalMinutes % MINUTES_PER_HOUR === 0;
 }
 
+/** Raw text of the hour and minute input fields. */
+export interface DurationInput {
+  hours: string;
+  minutes: string;
+}
+
+/** Parses input field text. Empty fields count as 0, other text becomes NaN. */
+export function parseDurationInput({ hours, minutes }: DurationInput): HoursMinutes {
+  const parse = (text: string) => (text.trim() === '' ? 0 : Number(text));
+  return { hours: parse(hours), minutes: parse(minutes) };
+}
+
+export function toDurationInput(totalMinutes: number): DurationInput {
+  const { hours, minutes } = splitMinutes(totalMinutes);
+  return { hours: String(hours), minutes: String(minutes) };
+}
+
 export type DurationError = 'invalidNumber' | 'minutesOutOfRange' | 'negativeHours' | 'zero';
 
 /** Validates a duration input. Hours must be >= 0, minutes 0..59 and the total > 0. */
