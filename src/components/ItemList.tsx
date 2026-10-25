@@ -137,12 +137,34 @@ function Row({
           />
         </div>
       );
+    case 'creditCarryOut':
+      return (
+        <div className="pl-3">
+          <RowContent
+            tone="adjust"
+            label={strings.itemTypes.creditCarry}
+            detail={strings.list.carryOutTo(formatMonthName(row.toMonth))}
+            value={formatSignedDuration(-row.minutes)}
+          />
+        </div>
+      );
     case 'carryIn':
       return (
         <div className="pl-3">
           <RowContent
             tone="adjust"
             label={strings.itemTypes.carryIn}
+            detail={strings.list.carryInFrom(formatMonthName(row.fromMonth))}
+            value={formatSignedDuration(row.minutes)}
+          />
+        </div>
+      );
+    case 'creditCarryIn':
+      return (
+        <div className="pl-3">
+          <RowContent
+            tone="adjust"
+            label={strings.itemTypes.creditCarry}
             detail={strings.list.carryInFrom(formatMonthName(row.fromMonth))}
             value={formatSignedDuration(row.minutes)}
           />

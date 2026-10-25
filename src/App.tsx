@@ -100,6 +100,7 @@ export function App() {
             data={data}
             onMonthChange={setMonth}
             onItemDeleted={handleItemDeleted}
+            onNotify={showMessage}
             run={run}
           />
         )}

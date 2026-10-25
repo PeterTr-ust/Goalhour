@@ -10,7 +10,8 @@ import {
   type CloseChoice,
   type MonthData,
 } from '../lib/month';
-import { formatMonth, strings } from '../lib/strings';
+import { formatDuration } from '../lib/duration';
+import { formatMonth, formatMonthName, strings } from '../lib/strings';
 import type { Item, MonthKey } from '../lib/types';
 import { Button } from './Button';
 import { CloseMonthDialog } from './CloseMonthDialog';
@@ -31,10 +32,19 @@ interface MonthViewProps {
   onMonthChange: (month: MonthKey) => void;
   /** Called after an item was deleted, e.g. to offer undo. */
   onItemDeleted: (item: Item) => void;
+  /** Shows a short notice, e.g. about credit minutes carried into the next month. */
+  onNotify: (message: string) => void;
   run: RunAction;
 }
 
-export function MonthView({ month, data, onMonthChange, onItemDeleted, run }: MonthViewProps) {
+export function MonthView({
+  month,
+  data,
+  onMonthChange,
+  onItemDeleted,
+  onNotify,
+  run,
+}: MonthViewProps) {
   const [panel, setPanel] = useState<OpenPanel>({ kind: 'none' });
   const closePanel = () => setPanel({ kind: 'none' });
 
@@ -42,18 +52,31 @@ export function MonthView({ month, data, onMonthChange, onItemDeleted, run }: Mo
   const isClosed = summary.close !== undefined;
   const rows = buildListRows(summary, data.items);
 
+  const close = (choice: CloseChoice) =>
+    run(async () => {
+      const stored = await closeMonth(month, choice);
+      if (stored.creditCarry) {
+        onNotify(
+          strings.month.creditCarried(
+            formatDuration(stored.creditCarry),
+            formatMonthName(nextMonth(month)),
+          ),
+        );
+      }
+    });
+
   const handleCloseMonth = () => {
-    if (needsCloseChoice(summary.raw)) {
+    if (needsCloseChoice(summary.entryRaw)) {
       setPanel({ kind: 'close' });
       return;
     }
-    // A full hour total needs no choice; the stored mode becomes 'none'.
-    void run(() => closeMonth(month, 'roundUp'));
+    // Entries on a full hour need no choice; the stored mode becomes 'none'.
+    void close('roundUp');
   };
 
   const handleCloseChoice = (choice: CloseChoice) => {
     closePanel();
-    void run(() => closeMonth(month, choice));
+    void close(choice);
   };
 
   return (
@@ -117,7 +140,8 @@ export function MonthView({ month, data, onMonthChange, onItemDeleted, run }: Mo
       {panel.kind === 'close' && (
         <CloseMonthDialog
           month={month}
-          raw={summary.raw}
+          entryRaw={summary.entryRaw}
+          creditRaw={summary.creditRaw}
           carryOverAllowed={canCarryOver(data.closes, month)}
           onChoose={handleCloseChoice}
           onClose={closePanel}

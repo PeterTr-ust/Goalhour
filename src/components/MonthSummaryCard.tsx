@@ -1,6 +1,7 @@
+import { previousMonth } from '../lib/calendar';
 import { formatDuration, formatSignedDuration } from '../lib/duration';
 import type { MonthSummary } from '../lib/month';
-import { strings } from '../lib/strings';
+import { formatMonthName, strings } from '../lib/strings';
 import { GoalButton, GoalHeadline, SummaryRow } from './GoalOverview';
 import { StatusBadge } from './StatusBadge';
 
@@ -29,7 +30,18 @@ export function MonthSummaryCard({ summary, onEditGoal }: MonthSummaryCardProps)
 
       <dl className="mt-5 divide-y divide-line text-base">
         <SummaryRow label={strings.month.entries} value={formatDuration(summary.entries)} />
-        <SummaryRow label={strings.month.credits} value={formatDuration(summary.credits)} />
+        <SummaryRow
+          label={strings.month.credits}
+          value={formatDuration(summary.creditRaw)}
+          detail={
+            summary.creditCarryIn > 0
+              ? {
+                  label: strings.month.creditCarryIn(formatMonthName(previousMonth(summary.month))),
+                  value: formatDuration(summary.creditCarryIn),
+                }
+              : undefined
+          }
+        />
         {summary.carryIn > 0 && (
           <SummaryRow label={strings.month.carryIn} value={formatDuration(summary.carryIn)} />
         )}
@@ -45,6 +57,12 @@ export function MonthSummaryCard({ summary, onEditGoal }: MonthSummaryCardProps)
             value={formatSignedDuration(-close.adjustment)}
           />
         )}
+        {close?.creditCarry ? (
+          <SummaryRow
+            label={strings.month.creditCarryOut}
+            value={formatSignedDuration(-close.creditCarry)}
+          />
+        ) : null}
       </dl>
 
       <GoalButton

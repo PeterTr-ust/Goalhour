@@ -41,19 +41,27 @@ export function GoalHeadline({ caption, progressLabel, total, goal }: GoalHeadli
   );
 }
 
-export function SummaryRow({
-  label,
-  value,
-  strong = false,
-}: {
+interface SummaryRowProps {
   label: string;
   value: string;
   strong?: boolean;
-}) {
+  /** Smaller second line that details the row (e.g. "davon Übertrag …"). */
+  detail?: { label: string; value: string } | undefined;
+}
+
+export function SummaryRow({ label, value, strong = false, detail }: SummaryRowProps) {
   return (
-    <div className="flex justify-between py-2">
-      <dt className={strong ? 'font-semibold' : 'text-muted'}>{label}</dt>
-      <dd className={`tabular-nums ${strong ? 'font-bold' : 'font-medium'}`}>{value}</dd>
+    <div className="py-2">
+      <div className="flex justify-between">
+        <dt className={strong ? 'font-semibold' : 'text-muted'}>{label}</dt>
+        <dd className={`tabular-nums ${strong ? 'font-bold' : 'font-medium'}`}>{value}</dd>
+      </div>
+      {detail && (
+        <div className="flex justify-between pl-4 text-sm text-muted">
+          <dt>{detail.label}</dt>
+          <dd className="tabular-nums">{detail.value}</dd>
+        </div>
+      )}
     </div>
   );
 }
