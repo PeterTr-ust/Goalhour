@@ -18,7 +18,10 @@ const content: BackupContent = {
   ],
   goals: [{ month: '2026-09', minutes: 3000 }],
   yearGoals: [{ startYear: 2026, minutes: 36000 }],
-  closes: [{ month: '2026-09', mode: 'carryOver', adjustment: 15 }],
+  closes: [
+    { month: '2026-08', mode: 'carryOver', adjustment: 15 },
+    { month: '2026-09', mode: 'roundUp', adjustment: 20, creditCarry: 30 },
+  ],
 };
 
 function roundTrip(overrides: Record<string, unknown>) {
@@ -30,8 +33,22 @@ describe('createBackup and parseBackup', () => {
     const text = JSON.stringify(createBackup(content, NOW));
     expect(parseBackup(text)).toEqual({
       ok: true,
-      backup: { app: 'goalhour', version: 1, exportedAt: NOW, ...content },
+      backup: { app: 'goalhour', version: 2, exportedAt: NOW, ...content },
     });
+  });
+
+  it('keeps closes without credit carry free of it (older closes)', () => {
+    const result = roundTrip({});
+    expect(result.ok && result.backup.closes[0]).toEqual({
+      month: '2026-08',
+      mode: 'carryOver',
+      adjustment: 15,
+    });
+  });
+
+  it('still accepts format version 1', () => {
+    const result = roundTrip({ version: 1, closes: [content.closes[0]] });
+    expect(result.ok).toBe(true);
   });
 
   it('rejects text that is not JSON or not a Goalhour backup', () => {
@@ -41,7 +58,8 @@ describe('createBackup and parseBackup', () => {
   });
 
   it('rejects unknown format versions', () => {
-    expect(roundTrip({ version: 2 })).toEqual({ ok: false, error: 'unsupportedVersion' });
+    expect(roundTrip({ version: 3 })).toEqual({ ok: false, error: 'unsupportedVersion' });
+    expect(roundTrip({ version: '2' })).toEqual({ ok: false, error: 'unsupportedVersion' });
   });
 
   it('accepts backups without year goals', () => {
@@ -61,6 +79,14 @@ describe('createBackup and parseBackup', () => {
     [
       'a close adjustment of 60',
       { closes: [{ month: '2026-09', mode: 'roundUp', adjustment: 60 }] },
+    ],
+    [
+      'a credit carry of 60',
+      { closes: [{ month: '2026-09', mode: 'none', adjustment: 0, creditCarry: 60 }] },
+    ],
+    [
+      'a negative credit carry',
+      { closes: [{ month: '2026-09', mode: 'none', adjustment: 0, creditCarry: -1 }] },
     ],
     ['missing lists', { items: undefined }],
     ['a missing export time', { exportedAt: 'yesterday' }],

@@ -2,7 +2,12 @@ import { MAX_MINUTE_FIELD } from './duration';
 import type { CloseMode, Item, MonthClose, MonthGoal, YearGoal } from './types';
 
 export const BACKUP_APP_ID = 'goalhour';
-export const BACKUP_FORMAT_VERSION = 1;
+/**
+ * Current format written by the app. Every older version must stay importable.
+ * 1: initial format. 2: closes may carry `creditCarry` (credits settled separately).
+ */
+export const BACKUP_FORMAT_VERSION = 2;
+const SUPPORTED_VERSIONS: readonly number[] = [1, 2];
 export const BACKUP_REMINDER_DAYS = 14;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -61,6 +66,11 @@ function isPositiveInteger(value: unknown): value is number {
   return isNonNegativeInteger(value) && value > 0;
 }
 
+/** 0..59: what can be left over below a full hour. */
+function isMinuteRemainder(value: unknown): value is number {
+  return isNonNegativeInteger(value) && value <= MAX_MINUTE_FIELD;
+}
+
 function isString(value: unknown, pattern?: RegExp): value is string {
   return typeof value === 'string' && (pattern === undefined || pattern.test(value));
 }
@@ -108,14 +118,16 @@ function parseClose(value: unknown): MonthClose | null {
   if (!isRecord(value) || !isString(value.month, MONTH_PATTERN)) {
     return null;
   }
-  const { mode, adjustment } = value;
-  if (!CLOSE_MODES.includes(mode as CloseMode) || !isNonNegativeInteger(adjustment)) {
+  const { mode, adjustment, creditCarry } = value;
+  if (!CLOSE_MODES.includes(mode as CloseMode) || !isMinuteRemainder(adjustment)) {
     return null;
   }
-  if (adjustment > MAX_MINUTE_FIELD) {
-    return null;
+  const close: MonthClose = { month: value.month, mode: mode as CloseMode, adjustment };
+  // Closes from before the separate credit settlement have no creditCarry and keep it absent.
+  if (creditCarry === undefined) {
+    return close;
   }
-  return { month: value.month, mode: mode as CloseMode, adjustment };
+  return isMinuteRemainder(creditCarry) ? { ...close, creditCarry } : null;
 }
 
 /** Parses every entry of a list, or returns null if the list or any entry is invalid. */
@@ -149,7 +161,7 @@ export function parseBackup(text: string): ParseResult {
   if (!isRecord(raw) || raw.app !== BACKUP_APP_ID) {
     return { ok: false, error: 'notABackup' };
   }
-  if (raw.version !== BACKUP_FORMAT_VERSION) {
+  if (typeof raw.version !== 'number' || !SUPPORTED_VERSIONS.includes(raw.version)) {
     return { ok: false, error: 'unsupportedVersion' };
   }
 

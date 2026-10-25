@@ -106,11 +106,13 @@ export async function closeMonth(month: MonthKey, choice: CloseChoice): Promise<
       db.goals.toArray(),
       db.closes.toArray(),
     ]);
-    if (choice === 'carryOver' && !canCarryOver(closes, month)) {
+    const { entryRaw, creditRaw } = summarizeMonth(month, { items, goals, closes });
+    const close = buildClose(month, entryRaw, creditRaw, choice);
+    // Anything carried into an already closed next month would silently change it.
+    const carriesMinutes = close.mode === 'carryOver' || (close.creditCarry ?? 0) > 0;
+    if (carriesMinutes && !canCarryOver(closes, month)) {
       throw new RepositoryError('nextMonthClosed');
     }
-    const { raw } = summarizeMonth(month, { items, goals, closes });
-    const close = buildClose(month, raw, choice);
     await db.closes.put(close);
     return close;
   });

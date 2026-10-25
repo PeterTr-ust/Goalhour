@@ -55,6 +55,10 @@ export const strings = {
     entries: 'Einträge',
     credits: 'Gutschriften',
     carryIn: 'Übertrag aus dem Vormonat',
+    creditCarryIn: (month: string) => `davon Übertrag aus ${month}`,
+    creditCarryOut: 'Übertrag Gutschrift',
+    creditCarried: (minutes: string, month: string) =>
+      `${minutes} Gutschrift in den ${month} übertragen`,
     total: 'Gesamt',
     provisional: 'vorläufig',
     final: 'endgültig',
@@ -80,6 +84,7 @@ export const strings = {
     roundUp: 'Aufrundung',
     carryIn: 'Übertrag',
     carryOut: 'Übertrag',
+    creditCarry: 'Übertrag Gutschrift',
   },
   list: {
     carryInFrom: (month: string) => `aus ${month}`,
@@ -114,14 +119,17 @@ export const strings = {
   },
   closeDialog: {
     title: 'Monat abschließen',
-    description: (total: string) =>
-      `Das Gesamt von ${total} ist keine volle Stunde. Wie soll der Rest behandelt werden?`,
+    description: (entries: string) =>
+      `Die Einträge (${entries}) enden nicht auf einer vollen Stunde. Wie soll der Rest behandelt werden?`,
     roundUp: 'Aufrunden',
     roundUpPreview: (from: string, to: string, added: string) =>
-      `${from} wird ${to} (+${added} Aufrundung)`,
+      `Einträge ${from} werden ${to} (+${added} Aufrundung)`,
     carryOver: 'Übertragen',
     carryOverPreview: (from: string, to: string, rest: string, month: string) =>
-      `${from} wird ${to}, ${rest} gehen als Übertrag in den ${month}`,
+      `Einträge ${from} werden ${to}, ${rest} gehen als Übertrag in den ${month}`,
+    monthTotal: (total: string) => `Monat gesamt: ${total}`,
+    creditInfo: (from: string, to: string, rest: string, month: string) =>
+      `Gutschriften ${from} werden ${to}, ${rest} gehen automatisch in den ${month}.`,
     carryOverBlocked: 'Nicht möglich, weil der Folgemonat bereits abgeschlossen ist.',
   },
   serviceYear: {

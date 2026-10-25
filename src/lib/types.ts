@@ -31,7 +31,14 @@ export type CloseMode = 'roundUp' | 'carryOver' | 'none';
 
 export interface MonthClose {
   month: MonthKey;
+  /** How the remainder of the entries (plus their carry-in) was settled. */
   mode: CloseMode;
   /** Minutes added (roundUp) or moved to the next month (carryOver). */
   adjustment: number;
+  /**
+   * Remainder of the credits (plus their carry-in) moved to the next month's credits.
+   * Missing on months closed before credits were settled separately: there `mode` and
+   * `adjustment` apply to the combined total, and those totals must stay unchanged.
+   */
+  creditCarry?: number;
 }
