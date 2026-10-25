@@ -9,8 +9,10 @@ interface DurationFieldsProps {
   error?: string | undefined;
 }
 
+// Fixed height plus equal line height: iOS ignores vertical centering in date/time fields
+// otherwise and shows their value at the top (see also the date-and-time rule in index.css).
 export const FIELD_CLASSES =
-  'block min-h-12 w-full min-w-0 appearance-none rounded-2xl border border-line bg-surface px-4 text-left text-lg tabular-nums text-fg outline-none transition-colors focus:border-fg';
+  'field block h-12 w-full min-w-0 appearance-none rounded-2xl border border-line bg-surface px-4 py-0 text-left text-lg leading-[2.875rem] tabular-nums text-fg outline-none transition-colors focus:border-fg';
 
 /** Two numeric inputs for hours and minutes. */
 export function DurationFields({ legend, value, onChange, error }: DurationFieldsProps) {

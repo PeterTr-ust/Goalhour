@@ -84,6 +84,11 @@ export function App() {
 
   return (
     <div className="min-h-full pt-[calc(env(safe-area-inset-top)+0.25rem)] pr-[max(env(safe-area-inset-right),1rem)] pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pl-[max(env(safe-area-inset-left),1rem)]">
+      {/* Covers the status bar area so scrolled content does not run under the clock. */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-x-0 top-0 z-20 h-[env(safe-area-inset-top)] bg-bg/85 backdrop-blur-xl"
+      />
       <div className="mx-auto max-w-xl">
         <AppHeader onOpenSettings={() => setSettingsOpen(true)} />
       </div>

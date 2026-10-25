@@ -109,6 +109,14 @@ body {
   overscroll-behavior: none;
 }
 
+/* iOS renders the value of date/time fields in an inner box with its own height and margin. */
+.field::-webkit-date-and-time-value {
+  margin: 0;
+  min-height: 0;
+  line-height: inherit;
+  text-align: left;
+}
+
 dialog::backdrop {
   background-color: rgb(0 0 0 / 0.45);
   animation: backdrop-in 240ms ease-out;
