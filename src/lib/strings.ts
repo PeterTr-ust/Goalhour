@@ -53,7 +53,7 @@ export const strings = {
   month: {
     previous: 'Vorheriger Monat',
     next: 'Nächster Monat',
-    entries: 'Einträge',
+    entries: 'Stunden',
     credits: 'Gutschriften',
     carryIn: 'Übertrag aus dem Vormonat',
     creditCarryIn: (month: string) => `davon Übertrag aus ${month}`,
@@ -76,11 +76,11 @@ export const strings = {
     reopen: 'Wieder öffnen',
     reopenBlocked: 'Zuerst den Folgemonat wieder öffnen.',
     lockedHint: 'Dieser Monat ist abgeschlossen. Zum Ändern wieder öffnen.',
-    emptyList: 'Noch keine Einträge in diesem Monat.',
-    listTitle: 'Einträge und Gutschriften',
+    emptyList: 'In diesem Monat ist noch nichts eingetragen.',
+    listTitle: 'Stunden und Gutschriften',
   },
   itemTypes: {
-    entry: 'Eintrag',
+    entry: 'Stunden',
     credit: 'Gutschrift',
     roundUp: 'Aufrundung',
     carryIn: 'Übertrag',
@@ -107,7 +107,7 @@ export const strings = {
     cancel: 'Abbrechen',
     delete: 'Löschen',
     confirmDelete: 'Wirklich löschen',
-    add: 'Neuer Eintrag',
+    add: 'Stunden oder Gutschrift hinzufügen',
     dateRequired: 'Bitte ein Datum wählen.',
   },
   goalDialog: {
@@ -121,13 +121,13 @@ export const strings = {
   closeDialog: {
     title: 'Monat abschließen',
     description: (entries: string) =>
-      `Die Einträge (${entries}) enden nicht auf einer vollen Stunde. Wie soll der Rest behandelt werden?`,
+      `Die Stunden (${entries}) gehen nicht in vollen Stunden auf. Wie soll der Rest behandelt werden?`,
     roundUp: 'Aufrunden',
     roundUpPreview: (from: string, to: string, added: string) =>
-      `Einträge ${from} werden ${to} (+${added} Aufrundung)`,
+      `Stunden ${from} werden ${to} (+${added} Aufrundung)`,
     carryOver: 'Übertragen',
     carryOverPreview: (from: string, to: string, rest: string, month: string) =>
-      `Einträge ${from} werden ${to}, ${rest} gehen als Übertrag in den ${month}`,
+      `Stunden ${from} werden ${to}, ${rest} gehen als Übertrag in den ${month}`,
     monthTotal: (total: string) => `Monat gesamt: ${total}`,
     creditInfo: (from: string, to: string, rest: string, month: string) =>
       `Gutschriften ${from} werden ${to}, ${rest} gehen automatisch in den ${month}.`,
@@ -144,11 +144,11 @@ export const strings = {
     closed: 'abgeschlossen',
     noValue: '–',
     openMonth: (month: string) => `${month} öffnen`,
-    entries: 'Einträge',
+    entries: 'Stunden',
     credits: 'Gutschriften',
     balance: 'Übertrag/Aufrundung',
     total: 'Gesamt',
-    breakdown: (entries: string, credits: string) => `Einträge ${entries} · Gutschr. ${credits}`,
+    breakdown: (entries: string, credits: string) => `Stunden ${entries} · Gutschr. ${credits}`,
     yearGoal: 'Jahresziel',
     setYearGoal: 'Jahresziel festlegen',
     editYearGoal: (value: string) => `Jahresziel ${value}, ändern`,
@@ -188,7 +188,7 @@ export const strings = {
   restore: {
     title: 'Backup wiederherstellen',
     summary: (date: string, items: number, months: number) =>
-      `Backup vom ${date}: ${items} ${items === 1 ? 'Eintrag oder Gutschrift' : 'Einträge und Gutschriften'}, ${months} ${months === 1 ? 'abgeschlossener Monat' : 'abgeschlossene Monate'}.`,
+      `Backup vom ${date}: ${items} ${items === 1 ? 'Eintrag (Stunden oder Gutschrift)' : 'Einträge (Stunden und Gutschriften)'}, ${months} ${months === 1 ? 'abgeschlossener Monat' : 'abgeschlossene Monate'}.`,
     warning: 'Alle aktuellen Daten auf diesem Gerät werden dadurch ersetzt.',
     confirm: 'Ersetzen und wiederherstellen',
   },
