@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { setYearGoal } from '../db/repository';
+import { setWeeksOff, setYearGoal } from '../db/repository';
 import type { StoredData } from '../hooks/useStoredData';
 import { formatDuration, formatSignedDuration } from '../lib/duration';
 import { goalProgress, goalStatus, goalTone, type GoalTone } from '../lib/goal';
 import type { MonthSummary } from '../lib/month';
+import { weeksOffFor } from '../lib/plan';
 import {
   formatServiceYear,
   goalDifference,
@@ -15,7 +16,9 @@ import type { MonthKey } from '../lib/types';
 import { GoalDialog } from './GoalDialog';
 import { GoalButton, GoalHeadline, SummaryRow } from './GoalOverview';
 import { PeriodNavigator } from './PeriodNavigator';
+import { PlanCard } from './PlanCard';
 import { StatusBadge } from './StatusBadge';
+import { WeeksOffDialog } from './WeeksOffDialog';
 
 type RunAction = (action: () => Promise<unknown>) => Promise<boolean>;
 
@@ -42,8 +45,10 @@ export function ServiceYearView({
   onOpenMonth,
   run,
 }: ServiceYearViewProps) {
-  const [editingGoal, setEditingGoal] = useState(false);
+  const [editing, setEditing] = useState<'none' | 'goal' | 'weeksOff'>('none');
+  const stopEditing = () => setEditing('none');
   const summary = summarizeServiceYear(startYear, data);
+  const weeksOff = weeksOffFor(startYear, data.yearPlans);
 
   return (
     <div className="flex flex-col gap-4">
@@ -55,7 +60,13 @@ export function ServiceYearView({
         onNext={() => onYearChange(startYear + 1)}
       />
 
-      <YearSummaryCard summary={summary} onEditGoal={() => setEditingGoal(true)} />
+      <YearSummaryCard summary={summary} onEditGoal={() => setEditing('goal')} />
+
+      <PlanCard
+        yearGoal={summary.goal}
+        weeksOff={weeksOff}
+        onEditWeeksOff={() => setEditing('weeksOff')}
+      />
 
       {/* Keyed by year so the rows animate in when switching years. */}
       <ul key={startYear} className="divide-y divide-line overflow-hidden rounded-3xl bg-surface">
@@ -70,13 +81,21 @@ export function ServiceYearView({
         ))}
       </ul>
 
-      {editingGoal && (
+      {editing === 'goal' && (
         <GoalDialog
           title={strings.goalDialog.yearTitle}
           description={strings.goalDialog.yearDescription(formatServiceYear(startYear))}
           currentGoal={summary.goal}
           onSave={(minutes) => run(() => setYearGoal(startYear, minutes))}
-          onClose={() => setEditingGoal(false)}
+          onClose={stopEditing}
+        />
+      )}
+      {editing === 'weeksOff' && (
+        <WeeksOffDialog
+          serviceYear={formatServiceYear(startYear)}
+          current={weeksOff}
+          onSave={(weeks) => run(() => setWeeksOff(startYear, weeks))}
+          onClose={stopEditing}
         />
       )}
     </div>
