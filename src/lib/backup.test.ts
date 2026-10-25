@@ -18,6 +18,7 @@ const content: BackupContent = {
   ],
   goals: [{ month: '2026-09', minutes: 3000 }],
   yearGoals: [{ startYear: 2026, minutes: 36000 }],
+  yearPlans: [{ startYear: 2026, weeksOff: 4 }],
   closes: [
     { month: '2026-08', mode: 'carryOver', adjustment: 15 },
     { month: '2026-09', mode: 'roundUp', adjustment: 20, creditCarry: 30 },
@@ -33,8 +34,13 @@ describe('createBackup and parseBackup', () => {
     const text = JSON.stringify(createBackup(content, NOW));
     expect(parseBackup(text)).toEqual({
       ok: true,
-      backup: { app: 'goalhour', version: 2, exportedAt: NOW, ...content },
+      backup: { app: 'goalhour', version: 3, exportedAt: NOW, ...content },
     });
+  });
+
+  it('accepts backups without year plans (formats 1 and 2)', () => {
+    const result = roundTrip({ version: 2, yearPlans: undefined });
+    expect(result.ok && result.backup.yearPlans).toEqual([]);
   });
 
   it('keeps closes without credit carry free of it (older closes)', () => {
@@ -58,7 +64,7 @@ describe('createBackup and parseBackup', () => {
   });
 
   it('rejects unknown format versions', () => {
-    expect(roundTrip({ version: 3 })).toEqual({ ok: false, error: 'unsupportedVersion' });
+    expect(roundTrip({ version: 4 })).toEqual({ ok: false, error: 'unsupportedVersion' });
     expect(roundTrip({ version: '2' })).toEqual({ ok: false, error: 'unsupportedVersion' });
   });
 
@@ -87,6 +93,17 @@ describe('createBackup and parseBackup', () => {
     [
       'a negative credit carry',
       { closes: [{ month: '2026-09', mode: 'none', adjustment: 0, creditCarry: -1 }] },
+    ],
+    ['52 weeks off', { yearPlans: [{ startYear: 2026, weeksOff: 52 }] }],
+    ['fractional weeks off', { yearPlans: [{ startYear: 2026, weeksOff: 2.5 }] }],
+    [
+      'duplicate year plans',
+      {
+        yearPlans: [
+          { startYear: 2026, weeksOff: 1 },
+          { startYear: 2026, weeksOff: 2 },
+        ],
+      },
     ],
     ['missing lists', { items: undefined }],
     ['a missing export time', { exportedAt: 'yesterday' }],

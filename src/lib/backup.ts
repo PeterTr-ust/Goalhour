@@ -1,13 +1,15 @@
 import { MAX_MINUTE_FIELD } from './duration';
-import type { CloseMode, Item, MonthClose, MonthGoal, YearGoal } from './types';
+import { validateWeeksOff } from './plan';
+import type { CloseMode, Item, MonthClose, MonthGoal, YearGoal, YearPlan } from './types';
 
 export const BACKUP_APP_ID = 'goalhour';
 /**
  * Current format written by the app. Every older version must stay importable.
  * 1: initial format. 2: closes may carry `creditCarry` (credits settled separately).
+ * 3: adds `yearPlans` (planned weeks off per service year).
  */
-export const BACKUP_FORMAT_VERSION = 2;
-const SUPPORTED_VERSIONS: readonly number[] = [1, 2];
+export const BACKUP_FORMAT_VERSION = 3;
+const SUPPORTED_VERSIONS: readonly number[] = [1, 2, 3];
 export const BACKUP_REMINDER_DAYS = 14;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -20,6 +22,7 @@ export interface BackupContent {
   items: readonly Item[];
   goals: readonly MonthGoal[];
   yearGoals: readonly YearGoal[];
+  yearPlans: readonly YearPlan[];
   closes: readonly MonthClose[];
 }
 
@@ -38,6 +41,7 @@ export function createBackup(content: BackupContent, now: number): BackupFile {
     items: content.items,
     goals: content.goals,
     yearGoals: content.yearGoals,
+    yearPlans: content.yearPlans,
     closes: content.closes,
   };
 }
@@ -114,6 +118,16 @@ function parseYearGoal(value: unknown): YearGoal | null {
     : null;
 }
 
+function parseYearPlan(value: unknown): YearPlan | null {
+  if (!isRecord(value) || !isNonNegativeInteger(value.startYear)) {
+    return null;
+  }
+  const { weeksOff } = value;
+  return typeof weeksOff === 'number' && validateWeeksOff(weeksOff) === null
+    ? { startYear: value.startYear, weeksOff }
+    : null;
+}
+
 function parseClose(value: unknown): MonthClose | null {
   if (!isRecord(value) || !isString(value.month, MONTH_PATTERN)) {
     return null;
@@ -167,17 +181,21 @@ export function parseBackup(text: string): ParseResult {
 
   const items = parseList(raw.items, parseItem);
   const goals = parseList(raw.goals, parseGoal);
+  // Lists added in later formats are optional, so older backups still import.
   const yearGoals = parseList(raw.yearGoals ?? [], parseYearGoal);
+  const yearPlans = parseList(raw.yearPlans ?? [], parseYearPlan);
   const closes = parseList(raw.closes, parseClose);
   if (
     !isNonNegativeInteger(raw.exportedAt) ||
     items === null ||
     goals === null ||
     yearGoals === null ||
+    yearPlans === null ||
     closes === null ||
     !hasUniqueKeys(items, (item) => item.id) ||
     !hasUniqueKeys(goals, (goal) => goal.month) ||
     !hasUniqueKeys(yearGoals, (goal) => goal.startYear) ||
+    !hasUniqueKeys(yearPlans, (plan) => plan.startYear) ||
     !hasUniqueKeys(closes, (close) => close.month)
   ) {
     return { ok: false, error: 'invalidData' };
@@ -192,6 +210,7 @@ export function parseBackup(text: string): ParseResult {
       items,
       goals,
       yearGoals,
+      yearPlans,
       closes,
     },
   };

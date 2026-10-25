@@ -27,6 +27,13 @@ export interface YearGoal {
   minutes: number;
 }
 
+/** Planning input for one service year; not inherited by later years. */
+export interface YearPlan {
+  startYear: number;
+  /** Planned weeks without service (0..51). */
+  weeksOff: number;
+}
+
 export type CloseMode = 'roundUp' | 'carryOver' | 'none';
 
 export interface MonthClose {

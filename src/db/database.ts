@@ -1,5 +1,5 @@
 import { Dexie, type EntityTable } from 'dexie';
-import type { Item, MonthClose, MonthGoal, YearGoal } from '../lib/types';
+import type { Item, MonthClose, MonthGoal, YearGoal, YearPlan } from '../lib/types';
 
 const DATABASE_NAME = 'goalhour';
 
@@ -16,6 +16,7 @@ export class GoalhourDatabase extends Dexie {
   closes!: EntityTable<MonthClose, 'month'>;
   yearGoals!: EntityTable<YearGoal, 'startYear'>;
   meta!: EntityTable<MetaEntry, 'key'>;
+  yearPlans!: EntityTable<YearPlan, 'startYear'>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -28,6 +29,10 @@ export class GoalhourDatabase extends Dexie {
     this.version(2).stores({
       yearGoals: 'startYear',
       meta: 'key',
+    });
+    // Version 3 only adds the planning table.
+    this.version(3).stores({
+      yearPlans: 'startYear',
     });
   }
 }

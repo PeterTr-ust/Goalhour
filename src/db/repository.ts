@@ -73,19 +73,26 @@ export async function setYearGoal(startYear: number, minutes: number): Promise<v
   await db.yearGoals.put({ startYear, minutes });
 }
 
+export async function setWeeksOff(startYear: number, weeksOff: number): Promise<void> {
+  await db.yearPlans.put({ startYear, weeksOff });
+}
+
 /** Replaces all stored data with the content of a validated backup, all or nothing. */
 export async function replaceAllData(backup: BackupFile): Promise<void> {
-  await db.transaction('rw', [db.items, db.goals, db.yearGoals, db.closes, db.meta], async () => {
+  const tables = [db.items, db.goals, db.yearGoals, db.yearPlans, db.closes, db.meta];
+  await db.transaction('rw', tables, async () => {
     await Promise.all([
       db.items.clear(),
       db.goals.clear(),
       db.yearGoals.clear(),
+      db.yearPlans.clear(),
       db.closes.clear(),
     ]);
     await Promise.all([
       db.items.bulkAdd(backup.items),
       db.goals.bulkAdd(backup.goals),
       db.yearGoals.bulkAdd(backup.yearGoals),
+      db.yearPlans.bulkAdd(backup.yearPlans),
       db.closes.bulkAdd(backup.closes),
     ]);
     // The restored data is exactly what the backup contains.

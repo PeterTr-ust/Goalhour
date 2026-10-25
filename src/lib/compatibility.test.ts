@@ -28,6 +28,31 @@ const BACKUP_V1_COMBINED_SETTLEMENT = `{
   ]
 }`;
 
+/** Format version 3: adds planned weeks off per service year. */
+const BACKUP_V3_YEAR_PLANS = `{
+  "app": "goalhour",
+  "version": 3,
+  "exportedAt": 1793200000000,
+  "items": [
+    { "id": "s1", "type": "entry", "date": "2026-09-05", "minutes": 3000, "createdAt": 1 }
+  ],
+  "goals": [],
+  "yearGoals": [{ "startYear": 2026, "minutes": 36000 }],
+  "yearPlans": [{ "startYear": 2026, "weeksOff": 4 }],
+  "closes": [{ "month": "2026-09", "mode": "none", "adjustment": 0, "creditCarry": 0 }]
+}`;
+
+describe('backup format version 3 (year plans)', () => {
+  it('keeps the planned weeks off and the totals', () => {
+    const result = parseBackup(BACKUP_V3_YEAR_PLANS);
+    if (!result.ok) {
+      throw new Error(`Backup no longer parses: ${result.error}`);
+    }
+    expect(result.backup.yearPlans).toEqual([{ startYear: 2026, weeksOff: 4 }]);
+    expect(summarizeMonth('2026-09', result.backup).total).toBe(3000);
+  });
+});
+
 /** Format version 2: credits settled separately, remainder carried in `creditCarry`. */
 const BACKUP_V2_SEPARATE_CREDITS = `{
   "app": "goalhour",
@@ -73,6 +98,8 @@ describe('backup format version 1 (combined settlement)', () => {
     expect(data.items).toHaveLength(4);
     expect(data.closes).toHaveLength(2);
     expect(data.yearGoals).toEqual([{ startYear: 2026, minutes: 36000 }]);
+    // Added in format 3; missing in older backups.
+    expect(data.yearPlans).toEqual([]);
   });
 
   it('keeps the totals of months closed with the old combined rule', () => {

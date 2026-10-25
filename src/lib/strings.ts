@@ -1,5 +1,6 @@
 import type { BackupError } from './backup';
 import type { DurationError } from './duration';
+import type { WeeksOffError } from './plan';
 import { parseMonthKey } from './calendar';
 import { formatServiceYear } from './serviceYear';
 import type { MonthKey } from './types';
@@ -153,6 +154,21 @@ export const strings = {
     editYearGoal: (value: string) => `Jahresziel ${value}, ändern`,
     progress: 'Fortschritt zum Jahresziel',
   },
+  plan: {
+    title: 'Planung',
+    weeksOff: 'Wochen ohne Dienst',
+    weeksValue: (weeks: number) => (weeks === 1 ? '1 Woche' : `${weeks} Wochen`),
+    editWeeksOff: (weeks: string) => `Wochen ohne Dienst: ${weeks}, ändern`,
+    suggestion: 'Vorschlag pro Monat',
+    explanation: (goal: string, activeWeeks: number) =>
+      `Jahresziel ${goal} verteilt auf ${activeWeeks} aktive Wochen, umgerechnet auf einen Durchschnittsmonat.`,
+    needsGoal: 'Lege ein Jahresziel fest, um einen Vorschlag pro Monat zu erhalten.',
+    dialogTitle: 'Wochen ohne Dienst',
+    dialogDescription: (serviceYear: string) =>
+      `Wie viele Wochen planst du im Dienstjahr ${serviceYear} ohne Dienst (z. B. Urlaub)?`,
+    decrease: 'Eine Woche weniger',
+    increase: 'Eine Woche mehr',
+  },
   settings: {
     open: 'Einstellungen',
     title: 'Einstellungen',
@@ -192,6 +208,10 @@ export const strings = {
     nextMonthClosed: 'Der Folgemonat ist abgeschlossen. Bitte zuerst diesen wieder öffnen.',
     storage: 'Speichern fehlgeschlagen. Bitte erneut versuchen.',
     load: 'Daten konnten nicht geladen werden.',
+    weeksOff: {
+      invalidNumber: 'Bitte eine ganze Zahl eingeben.',
+      outOfRange: 'Bitte 0 bis 51 Wochen eingeben.',
+    } satisfies Record<WeeksOffError, string>,
     backupExport: 'Das Backup konnte nicht erstellt werden.',
     backupRead: 'Die Datei konnte nicht gelesen werden.',
     backup: {
