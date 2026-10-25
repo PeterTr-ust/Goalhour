@@ -37,38 +37,47 @@ export function MonthSummaryCard({ summary, onEditGoal }: MonthSummaryCardProps)
       />
 
       <dl className="mt-5 divide-y divide-line text-base">
-        {/* Carry-ins are shown the same way for both parts: as a note under the sum. */}
+        {/*
+          Carry-ins are shown the same way for both parts: as a note under the sum. Rows about
+          hours carry a filled dot, rows about credits an outlined one, like in the list.
+        */}
         <SummaryRow
           label={strings.month.entries}
+          marker="hours"
           value={formatDuration(summary.entryRaw)}
           detail={carryInDetail(summary.carryIn, previousMonthName)}
         />
         <SummaryRow
           label={strings.month.credits}
+          marker="credits"
           value={formatDuration(summary.creditRaw)}
           detail={carryInDetail(summary.creditCarryIn, previousMonthName)}
         />
         {close?.mode === 'roundUp' && (
           <SummaryRow
             label={strings.itemTypes.roundUp}
+            marker="hours"
             value={formatSignedDuration(close.adjustment)}
           />
         )}
         {close?.mode === 'carryOver' && (
           <SummaryRow
             label={strings.itemTypes.carryOut}
+            marker="hours"
             value={formatSignedDuration(-close.adjustment)}
           />
         )}
         {close?.creditRoundUp ? (
           <SummaryRow
-            label={strings.month.creditRoundUp}
+            label={strings.itemTypes.creditRoundUp}
+            marker="credits"
             value={formatSignedDuration(close.creditRoundUp)}
           />
         ) : null}
         {close?.creditCarry ? (
           <SummaryRow
-            label={strings.month.creditCarryOut}
+            label={strings.itemTypes.creditCarry}
+            marker="credits"
             value={formatSignedDuration(-close.creditCarry)}
           />
         ) : null}

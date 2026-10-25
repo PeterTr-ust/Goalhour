@@ -9,10 +9,14 @@ interface ItemListProps {
   onSelect: (item: Item) => void;
 }
 
-type Tone = 'entry' | 'credit' | 'adjust';
+type Tone = 'entry' | 'credit' | 'adjustHours' | 'adjustCredits';
 
-/** Types differ by fill style (solid, outline, dashed) and label, not by hue. */
-const TONE_CLASSES: Record<Tone, { bar: string; badge: string }> = {
+/**
+ * Types differ by fill style and label, not by hue: hours solid, credits outlined, and
+ * round-ups / carry-overs dashed with the dot of the part they belong to (filled = hours,
+ * outlined = credits), matching the month card.
+ */
+const TONE_CLASSES: Record<Tone, { bar: string; badge: string; dot?: string }> = {
   entry: {
     bar: 'bg-fg',
     badge: 'border-fg bg-fg text-bg',
@@ -21,9 +25,15 @@ const TONE_CLASSES: Record<Tone, { bar: string; badge: string }> = {
     bar: 'border-2 border-fg',
     badge: 'border-fg text-fg',
   },
-  adjust: {
+  adjustHours: {
+    bar: 'border-2 border-dashed border-fg',
+    badge: 'border-dashed border-fg text-fg',
+    dot: 'bg-fg',
+  },
+  adjustCredits: {
     bar: 'border-2 border-dashed border-muted',
     badge: 'border-dashed border-muted text-muted',
+    dot: 'border-[1.5px] border-current',
   },
 };
 
@@ -74,7 +84,12 @@ function RowContent({ tone, label, detail, value }: RowContentProps) {
     <span className="flex min-h-16 items-center gap-3 py-2 pr-4">
       <span className={`h-10 w-1.5 shrink-0 rounded-full ${classes.bar}`} aria-hidden="true" />
       <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-        <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${classes.badge}`}>
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-semibold ${classes.badge}`}
+        >
+          {classes.dot && (
+            <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${classes.dot}`} />
+          )}
           {label}
         </span>
         <span className="truncate text-sm text-muted">{detail}</span>
@@ -119,7 +134,7 @@ function Row({
       return (
         <div className="pl-3">
           <RowContent
-            tone="adjust"
+            tone="adjustHours"
             label={strings.itemTypes.roundUp}
             detail={strings.list.roundUpNote}
             value={formatSignedDuration(row.minutes)}
@@ -130,7 +145,7 @@ function Row({
       return (
         <div className="pl-3">
           <RowContent
-            tone="adjust"
+            tone="adjustHours"
             label={strings.itemTypes.carryOut}
             detail={strings.list.carryOutTo(formatMonthName(row.toMonth))}
             value={formatSignedDuration(-row.minutes)}
@@ -141,7 +156,7 @@ function Row({
       return (
         <div className="pl-3">
           <RowContent
-            tone="adjust"
+            tone="adjustCredits"
             label={strings.itemTypes.creditRoundUp}
             detail={strings.list.roundUpNote}
             value={formatSignedDuration(row.minutes)}
@@ -152,7 +167,7 @@ function Row({
       return (
         <div className="pl-3">
           <RowContent
-            tone="adjust"
+            tone="adjustCredits"
             label={strings.itemTypes.creditCarry}
             detail={strings.list.carryOutTo(formatMonthName(row.toMonth))}
             value={formatSignedDuration(-row.minutes)}
@@ -163,7 +178,7 @@ function Row({
       return (
         <div className="pl-3">
           <RowContent
-            tone="adjust"
+            tone="adjustHours"
             label={strings.itemTypes.carryIn}
             detail={strings.list.carryInFrom(formatMonthName(row.fromMonth))}
             value={formatSignedDuration(row.minutes)}
@@ -174,7 +189,7 @@ function Row({
       return (
         <div className="pl-3">
           <RowContent
-            tone="adjust"
+            tone="adjustCredits"
             label={strings.itemTypes.creditCarry}
             detail={strings.list.carryInFrom(formatMonthName(row.fromMonth))}
             value={formatSignedDuration(row.minutes)}

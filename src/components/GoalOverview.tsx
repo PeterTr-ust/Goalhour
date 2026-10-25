@@ -47,17 +47,34 @@ interface SummaryRowProps {
   strong?: boolean;
   /** Smaller second line that details the row (e.g. "davon Übertrag …"). */
   detail?: { label: string; value: string } | undefined;
+  /** Small dot that ties the row to hours (filled) or credits (outlined). */
+  marker?: SummaryMarker;
 }
 
-export function SummaryRow({ label, value, strong = false, detail }: SummaryRowProps) {
+type SummaryMarker = 'hours' | 'credits';
+
+const MARKER_CLASSES: Record<SummaryMarker, string> = {
+  hours: 'bg-fg',
+  credits: 'border-2 border-fg',
+};
+
+export function SummaryRow({ label, value, strong = false, detail, marker }: SummaryRowProps) {
   return (
     <div className="py-2">
       <div className="flex justify-between">
-        <dt className={strong ? 'font-semibold' : 'text-muted'}>{label}</dt>
+        <dt className={`flex items-center gap-2.5 ${strong ? 'font-semibold' : 'text-muted'}`}>
+          {marker && (
+            <span
+              aria-hidden="true"
+              className={`size-2.5 shrink-0 rounded-full ${MARKER_CLASSES[marker]}`}
+            />
+          )}
+          {label}
+        </dt>
         <dd className={`tabular-nums ${strong ? 'font-bold' : 'font-medium'}`}>{value}</dd>
       </div>
       {detail && (
-        <div className="flex justify-between pl-4 text-sm text-muted">
+        <div className={`flex justify-between text-sm text-muted ${marker ? 'pl-9' : 'pl-4'}`}>
           <dt>{detail.label}</dt>
           <dd className="tabular-nums">{detail.value}</dd>
         </div>
