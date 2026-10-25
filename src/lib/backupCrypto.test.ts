@@ -78,8 +78,9 @@ describe('isEncryptedBackup', () => {
 });
 
 describe('validateNewPassword', () => {
-  it('requires 8 characters and a matching repetition', () => {
-    expect(validateNewPassword('kurz', 'kurz')).toBe('tooShort');
+  it('requires 4 characters and a matching repetition', () => {
+    expect(validateNewPassword('abc', 'abc')).toBe('tooShort');
+    expect(validateNewPassword('abcd', 'abcd')).toBeNull();
     expect(validateNewPassword('lang-genug', 'lang-genuG')).toBe('mismatch');
     expect(validateNewPassword('lang-genug', 'lang-genug')).toBeNull();
   });

@@ -196,6 +196,7 @@ export const strings = {
     repeat: 'Passwort wiederholen',
     warning:
       'Ohne dieses Passwort lässt sich das Backup nicht wiederherstellen. Bewahre es sicher auf, z. B. in der Passwörter-App.',
+    strengthHint: 'Mindestens 4 Zeichen. Längere Passwörter schützen deutlich besser.',
     unprotectedWarning: 'Ohne Passwort kann jeder, der die Datei hat, deine Einträge lesen.',
     prepare: 'Backup vorbereiten',
     preparing: 'Wird verschlüsselt …',
@@ -238,7 +239,7 @@ export const strings = {
     backupExport: 'Das Backup konnte nicht erstellt werden.',
     backupRead: 'Die Datei konnte nicht gelesen werden.',
     password: {
-      tooShort: 'Das Passwort muss mindestens 8 Zeichen lang sein.',
+      tooShort: 'Das Passwort muss mindestens 4 Zeichen lang sein.',
       mismatch: 'Die Passwörter stimmen nicht überein.',
     } satisfies Record<PasswordError, string>,
     decrypt: {

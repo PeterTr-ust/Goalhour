@@ -7,7 +7,8 @@
 export const ENVELOPE_APP_ID = 'goalhour';
 /** Version of the envelope itself (not of the backup inside it). */
 export const ENVELOPE_VERSION = 1;
-export const MIN_PASSWORD_LENGTH = 8;
+/** Short on purpose (user decision); longer passwords are still recommended in the UI. */
+export const MIN_PASSWORD_LENGTH = 4;
 
 /** Current OWASP recommendation for PBKDF2-HMAC-SHA256. */
 const DEFAULT_ITERATIONS = 600_000;

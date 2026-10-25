@@ -136,6 +136,7 @@ export function ExportBackupDialog({ data, run, onDone, onClose }: ExportBackupD
               invalid={error !== undefined}
               describedBy={error ? errorId : undefined}
             />
+            <p className="text-sm text-muted">{strings.exportDialog.strengthHint}</p>
             <p className="text-sm text-danger">{strings.exportDialog.warning}</p>
           </div>
         ) : (
