@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppHeader } from './components/AppHeader';
 import { BackupReminder } from './components/BackupReminder';
 import { ErrorBanner } from './components/ErrorBanner';
+import { ExportBackupDialog } from './components/ExportBackupDialog';
 import { ItemSheet } from './components/ItemSheet';
 import { MonthView } from './components/MonthView';
 import { ServiceYearView } from './components/ServiceYearView';
@@ -10,7 +11,6 @@ import { TabBar, type Tab } from './components/TabBar';
 import { Toast } from './components/Toast';
 import { addItem, requestPersistentStorage, restoreItem } from './db/repository';
 import { useAction } from './hooks/useAction';
-import { useBackupExport } from './hooks/useBackupExport';
 import { useStoredData } from './hooks/useStoredData';
 import { useTheme } from './hooks/useTheme';
 import { useToast } from './hooks/useToast';
@@ -40,10 +40,14 @@ export function App() {
   const [serviceYear, setServiceYear] = useState(() => serviceYearOf(currentMonth()));
   const [adding, setAdding] = useState<AddDefaults | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   // Captured once per app start; enough for a reminder measured in days.
   const [now] = useState(() => Date.now());
   const showMessage = useCallback((message: string) => showToast(message), [showToast]);
-  const exportBackup = useBackupExport(data, run, showMessage);
+  const exportBackup = () => {
+    setSettingsOpen(false);
+    setExportOpen(true);
+  };
 
   useEffect(() => {
     requestPersistentStorage().catch((caught: unknown) => console.error(caught));
@@ -137,6 +141,14 @@ export function App() {
           onRestored={showMessage}
           run={run}
           onClose={() => setSettingsOpen(false)}
+        />
+      )}
+      {exportOpen && data && (
+        <ExportBackupDialog
+          data={data}
+          run={run}
+          onDone={showMessage}
+          onClose={() => setExportOpen(false)}
         />
       )}
       {toast && <Toast key={toast.id} toast={toast} />}

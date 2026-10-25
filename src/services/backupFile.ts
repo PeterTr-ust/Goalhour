@@ -1,7 +1,6 @@
-import { backupFileName, type BackupFile } from '../lib/backup';
+import { backupFileName } from '../lib/backup';
 
 const JSON_MIME_TYPE = 'application/json';
-const JSON_INDENT = 2;
 
 export type ExportOutcome = 'shared' | 'downloaded' | 'cancelled';
 
@@ -18,15 +17,16 @@ function download(file: File): void {
   URL.revokeObjectURL(url);
 }
 
-/**
- * Hands the backup to the user: via the share sheet where files can be shared (iOS: "Save to
- * Files"), otherwise as a download. Must be called directly from a user gesture.
- */
-export async function exportBackupFile(backup: BackupFile, now: Date): Promise<ExportOutcome> {
-  const file = new File([JSON.stringify(backup, null, JSON_INDENT)], backupFileName(now), {
-    type: JSON_MIME_TYPE,
-  });
+export function createBackupFile(text: string, now: Date): File {
+  return new File([text], backupFileName(now), { type: JSON_MIME_TYPE });
+}
 
+/**
+ * Hands the backup file to the user: via the share sheet where files can be shared (iOS:
+ * "Save to Files"), otherwise as a download. Must be called directly from a user gesture,
+ * so all slow work (like encryption) has to be finished before.
+ */
+export async function shareBackupFile(file: File): Promise<ExportOutcome> {
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: file.name });

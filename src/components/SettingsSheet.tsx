@@ -1,9 +1,11 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { replaceAllData } from '../db/repository';
 import { parseBackup, type BackupFile } from '../lib/backup';
+import { isEncryptedBackup } from '../lib/backupCrypto';
 import { formatDateTime, strings } from '../lib/strings';
 import { THEME_PREFERENCES, type ThemePreference } from '../lib/theme';
 import { Button } from './Button';
+import { DecryptBackupDialog } from './DecryptBackupDialog';
 import { Modal } from './Modal';
 import { SegmentedControl } from './SegmentedControl';
 
@@ -36,6 +38,16 @@ export function SettingsSheet({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileError, setFileError] = useState<string>();
   const [pendingRestore, setPendingRestore] = useState<BackupFile>();
+  const [encryptedText, setEncryptedText] = useState<string>();
+
+  const readPlainBackup = (text: string) => {
+    const result = parseBackup(text);
+    if (result.ok) {
+      setPendingRestore(result.backup);
+    } else {
+      setFileError(strings.errors.backup[result.error]);
+    }
+  };
 
   const handleFileChosen = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -53,11 +65,10 @@ export function SettingsSheet({
       setFileError(strings.errors.backupRead);
       return;
     }
-    const result = parseBackup(text);
-    if (result.ok) {
-      setPendingRestore(result.backup);
+    if (isEncryptedBackup(text)) {
+      setEncryptedText(text);
     } else {
-      setFileError(strings.errors.backup[result.error]);
+      readPlainBackup(text);
     }
   };
 
@@ -70,6 +81,19 @@ export function SettingsSheet({
       onClose();
     }
   };
+
+  if (encryptedText !== undefined && !pendingRestore) {
+    return (
+      <DecryptBackupDialog
+        encryptedText={encryptedText}
+        onDecrypted={(plain) => {
+          setEncryptedText(undefined);
+          readPlainBackup(plain);
+        }}
+        onClose={() => setEncryptedText(undefined)}
+      />
+    );
+  }
 
   if (pendingRestore) {
     return (
