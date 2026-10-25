@@ -57,6 +57,12 @@ export function MonthSummaryCard({ summary, onEditGoal }: MonthSummaryCardProps)
             value={formatSignedDuration(-close.adjustment)}
           />
         )}
+        {close?.creditRoundUp ? (
+          <SummaryRow
+            label={strings.month.creditRoundUp}
+            value={formatSignedDuration(close.creditRoundUp)}
+          />
+        ) : null}
         {close?.creditCarry ? (
           <SummaryRow
             label={strings.month.creditCarryOut}

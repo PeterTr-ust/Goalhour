@@ -7,11 +7,10 @@ import {
   canReopen,
   needsCloseChoice,
   summarizeMonth,
-  type CloseChoice,
+  type CloseChoices,
   type MonthData,
 } from '../lib/month';
-import { formatDuration } from '../lib/duration';
-import { formatMonth, formatMonthName, strings } from '../lib/strings';
+import { formatMonth, strings } from '../lib/strings';
 import type { Item, MonthKey } from '../lib/types';
 import { Button } from './Button';
 import { CloseMonthDialog } from './CloseMonthDialog';
@@ -32,19 +31,10 @@ interface MonthViewProps {
   onMonthChange: (month: MonthKey) => void;
   /** Called after an item was deleted, e.g. to offer undo. */
   onItemDeleted: (item: Item) => void;
-  /** Shows a short notice, e.g. about credit minutes carried into the next month. */
-  onNotify: (message: string) => void;
   run: RunAction;
 }
 
-export function MonthView({
-  month,
-  data,
-  onMonthChange,
-  onItemDeleted,
-  onNotify,
-  run,
-}: MonthViewProps) {
+export function MonthView({ month, data, onMonthChange, onItemDeleted, run }: MonthViewProps) {
   const [panel, setPanel] = useState<OpenPanel>({ kind: 'none' });
   const closePanel = () => setPanel({ kind: 'none' });
 
@@ -52,31 +42,20 @@ export function MonthView({
   const isClosed = summary.close !== undefined;
   const rows = buildListRows(summary, data.items);
 
-  const close = (choice: CloseChoice) =>
-    run(async () => {
-      const stored = await closeMonth(month, choice);
-      if (stored.creditCarry) {
-        onNotify(
-          strings.month.creditCarried(
-            formatDuration(stored.creditCarry),
-            formatMonthName(nextMonth(month)),
-          ),
-        );
-      }
-    });
+  const close = (choices: CloseChoices) => run(() => closeMonth(month, choices));
 
   const handleCloseMonth = () => {
-    if (needsCloseChoice(summary.entryRaw)) {
+    if (needsCloseChoice(summary.entryRaw, summary.creditRaw)) {
       setPanel({ kind: 'close' });
       return;
     }
-    // Entries on a full hour need no choice; the stored mode becomes 'none'.
-    void close('roundUp');
+    // Everything ends on a full hour: nothing to decide, both parts are stored as settled.
+    void close({ entries: 'roundUp', credits: 'roundUp' });
   };
 
-  const handleCloseChoice = (choice: CloseChoice) => {
+  const handleCloseChoices = (choices: CloseChoices) => {
     closePanel();
-    void close(choice);
+    void close(choices);
   };
 
   return (
@@ -143,7 +122,7 @@ export function MonthView({
           entryRaw={summary.entryRaw}
           creditRaw={summary.creditRaw}
           carryOverAllowed={canCarryOver(data.closes, month)}
-          onChoose={handleCloseChoice}
+          onConfirm={handleCloseChoices}
           onClose={closePanel}
         />
       )}

@@ -137,6 +137,17 @@ function Row({
           />
         </div>
       );
+    case 'creditRoundUp':
+      return (
+        <div className="pl-3">
+          <RowContent
+            tone="adjust"
+            label={strings.itemTypes.creditRoundUp}
+            detail={strings.list.roundUpNote}
+            value={formatSignedDuration(row.minutes)}
+          />
+        </div>
+      );
     case 'creditCarryOut':
       return (
         <div className="pl-3">
