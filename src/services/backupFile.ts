@@ -30,7 +30,8 @@ export function createBackupFile(text: string, now: Date): File {
 export async function shareBackupFile(file: File): Promise<ExportOutcome> {
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: file.name });
+      // Only the file: iOS saves a title or text as an extra .txt file next to it.
+      await navigator.share({ files: [file] });
       return 'shared';
     } catch (error) {
       if (isAbortError(error)) {
