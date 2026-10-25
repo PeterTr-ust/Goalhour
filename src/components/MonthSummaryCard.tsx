@@ -10,8 +10,16 @@ interface MonthSummaryCardProps {
   onEditGoal: () => void;
 }
 
+/** "davon Übertrag aus Oktober 0:30", or nothing when nothing was carried in. */
+function carryInDetail(minutes: number, fromMonth: string) {
+  return minutes > 0
+    ? { label: strings.month.carryInDetail(fromMonth), value: formatDuration(minutes) }
+    : undefined;
+}
+
 export function MonthSummaryCard({ summary, onEditGoal }: MonthSummaryCardProps) {
   const { goal, total, close } = summary;
+  const previousMonthName = formatMonthName(previousMonth(summary.month));
 
   return (
     <section aria-label={strings.month.total} className="rounded-3xl bg-surface p-5">
@@ -29,22 +37,17 @@ export function MonthSummaryCard({ summary, onEditGoal }: MonthSummaryCardProps)
       />
 
       <dl className="mt-5 divide-y divide-line text-base">
-        <SummaryRow label={strings.month.entries} value={formatDuration(summary.entries)} />
+        {/* Carry-ins are shown the same way for both parts: as a note under the sum. */}
+        <SummaryRow
+          label={strings.month.entries}
+          value={formatDuration(summary.entryRaw)}
+          detail={carryInDetail(summary.carryIn, previousMonthName)}
+        />
         <SummaryRow
           label={strings.month.credits}
           value={formatDuration(summary.creditRaw)}
-          detail={
-            summary.creditCarryIn > 0
-              ? {
-                  label: strings.month.creditCarryIn(formatMonthName(previousMonth(summary.month))),
-                  value: formatDuration(summary.creditCarryIn),
-                }
-              : undefined
-          }
+          detail={carryInDetail(summary.creditCarryIn, previousMonthName)}
         />
-        {summary.carryIn > 0 && (
-          <SummaryRow label={strings.month.carryIn} value={formatDuration(summary.carryIn)} />
-        )}
         {close?.mode === 'roundUp' && (
           <SummaryRow
             label={strings.itemTypes.roundUp}

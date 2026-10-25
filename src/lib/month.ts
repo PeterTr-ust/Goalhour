@@ -13,7 +13,7 @@ export interface MonthSummary {
   creditCarryIn: number;
   /** entries + carryIn: the part settled with the round-up / carry-over choice. */
   entryRaw: number;
-  /** credits + creditCarryIn: the part whose remainder is always carried over. */
+  /** credits + creditCarryIn: settled by its own round-up / carry-over choice. */
   creditRaw: number;
   /** entryRaw + creditRaw */
   raw: number;
