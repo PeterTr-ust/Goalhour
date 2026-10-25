@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseBackup } from './backup';
+import { decryptBackupText, isEncryptedBackup } from './backupCrypto';
 import { summarizeMonth } from './month';
 import { summarizeServiceYear } from './serviceYear';
 
@@ -27,6 +28,30 @@ const BACKUP_V1_COMBINED_SETTLEMENT = `{
     { "month": "2026-10", "mode": "roundUp", "adjustment": 30 }
   ]
 }`;
+
+/**
+ * Encrypted backup, envelope version 1, around a plain format 4 backup. Produced by an
+ * independent script with a fixed salt and IV. Invented password, for tests only.
+ */
+const ENCRYPTED_V1_PASSWORD = 'erfundenes-Test-Passwort';
+const ENCRYPTED_V1 = `{"app":"goalhour","encrypted":1,"kdf":{"name":"PBKDF2","hash":"SHA-256","iterations":100000,"salt":"AQIDBAUGBwgJCgsMDQ4PEA=="},"cipher":{"name":"AES-GCM","iv":"ZGVmZ2hpamtsbW5v"},"data":"dsJ8x+osV+7ZKHhDT/5RwgUIQtR4DBYOPUr/sfxuq7P5VgEjfkQRk29J0nwgym+nAAcr7yuln0yiAytfcp169C2yV68Qj5cGIZFH4QJffd1ZHW6nMXo8UGsMVKMoL27ih2lLT/36dMpWpr8YMwu5MUTR5PuWfciZFCJcILq/Vhj4Ka/ksNEd8agQF/EBea+Ze3zdngbaU+1Tt/DzJhlciIi9MpaPpWWqDy6WeCv0AkZBs79Lz4vOeR2U8bnlzHqQ66npVyWFpgy+/iTmOG7d5IkQ++WrFyhtpc3Dl/2L7ciNKs+bAye6S5UMKFXDtwWpoMX6AhpEITru6fVVuRzYYSjUu7ojpUC55uCzZ0KgWMpSYgD2sf1bl4Xf3OlYGp9f5czasmbDmcklU60J5EhAiPfYY0tVcSA5BDW6oY/pJwgs8kMZBHdhttLF6cRyNsutcYsJHKUuo6DVoD4rofgzzTTbDQir"}`;
+
+describe('encrypted backup, envelope version 1', () => {
+  it('decrypts and keeps the totals', async () => {
+    expect(isEncryptedBackup(ENCRYPTED_V1)).toBe(true);
+    const decrypted = await decryptBackupText(ENCRYPTED_V1, ENCRYPTED_V1_PASSWORD);
+    if (!decrypted.ok) {
+      throw new Error(`Encrypted backup no longer decrypts: ${decrypted.error}`);
+    }
+    const result = parseBackup(decrypted.text);
+    if (!result.ok) {
+      throw new Error(`Decrypted backup no longer parses: ${result.error}`);
+    }
+    // Hours 50:20 rounded up to 51:00, credits 2:30 -> 2:00 with 0:30 carried.
+    expect(summarizeMonth('2026-09', result.backup).total).toBe(3180);
+    expect(summarizeMonth('2026-10', result.backup).creditCarryIn).toBe(30);
+  });
+});
 
 /** Format version 4: credits may be rounded up (`creditRoundUp`) instead of carried over. */
 const BACKUP_V4_CREDIT_ROUND_UP = `{

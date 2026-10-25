@@ -1,4 +1,5 @@
 import type { BackupError } from './backup';
+import type { DecryptError, PasswordError } from './backupCrypto';
 import type { DurationError } from './duration';
 import type { WeeksOffError } from './plan';
 import { parseMonthKey } from './calendar';
@@ -187,8 +188,28 @@ export const strings = {
     restoreDone: 'Backup wiederhergestellt.',
     close: 'Fertig',
   },
+  exportDialog: {
+    title: 'Backup erstellen',
+    protect: 'Mit Passwort schützen',
+    protectInfo: 'Verschlüsselt das Backup (AES-256). Nur mit dem Passwort lässt es sich öffnen.',
+    password: 'Passwort',
+    repeat: 'Passwort wiederholen',
+    warning:
+      'Ohne dieses Passwort lässt sich das Backup nicht wiederherstellen. Bewahre es sicher auf, z. B. in der Passwörter-App.',
+    unprotectedWarning: 'Ohne Passwort kann jeder, der die Datei hat, deine Einträge lesen.',
+    prepare: 'Backup vorbereiten',
+    preparing: 'Wird verschlüsselt …',
+    ready: 'Das Backup ist bereit.',
+    readyEncrypted: 'Das verschlüsselte Backup ist bereit.',
+    save: 'Sichern oder teilen',
+  },
   restore: {
     title: 'Backup wiederherstellen',
+    passwordTitle: 'Verschlüsseltes Backup',
+    passwordInfo: 'Dieses Backup ist mit einem Passwort geschützt.',
+    password: 'Passwort',
+    decrypt: 'Entschlüsseln',
+    decrypting: 'Wird entschlüsselt …',
     summary: (date: string, items: number, months: number) =>
       `Backup vom ${date}: ${items} ${items === 1 ? 'Eintrag (Stunden oder Gutschrift)' : 'Einträge (Stunden und Gutschriften)'}, ${months} ${months === 1 ? 'abgeschlossener Monat' : 'abgeschlossene Monate'}.`,
     warning: 'Alle aktuellen Daten auf diesem Gerät werden dadurch ersetzt.',
@@ -216,6 +237,14 @@ export const strings = {
     } satisfies Record<WeeksOffError, string>,
     backupExport: 'Das Backup konnte nicht erstellt werden.',
     backupRead: 'Die Datei konnte nicht gelesen werden.',
+    password: {
+      tooShort: 'Das Passwort muss mindestens 8 Zeichen lang sein.',
+      mismatch: 'Die Passwörter stimmen nicht überein.',
+    } satisfies Record<PasswordError, string>,
+    decrypt: {
+      wrongPassword: 'Falsches Passwort oder beschädigte Datei.',
+      invalidEnvelope: 'Die verschlüsselte Datei ist beschädigt oder stammt nicht von Goalhour.',
+    } satisfies Record<DecryptError, string>,
     backup: {
       invalidJson: 'Die Datei ist kein gültiges Backup (kein JSON).',
       notABackup: 'Die Datei ist kein Goalhour-Backup.',
