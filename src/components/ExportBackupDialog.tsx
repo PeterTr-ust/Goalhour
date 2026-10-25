@@ -2,13 +2,25 @@ import { useId, useState, type FormEvent } from 'react';
 import { markBackupDone } from '../db/repository';
 import type { StoredData } from '../hooks/useStoredData';
 import { createBackup } from '../lib/backup';
-import { encryptBackupText, validateNewPassword } from '../lib/backupCrypto';
+import {
+  encryptBackupText,
+  MIN_PASSWORD_LENGTH,
+  PROTECTION_LEVELS,
+  validateNewPassword,
+  type ProtectionLevel,
+} from '../lib/backupCrypto';
 import { UserFacingError } from '../lib/errors';
 import { strings } from '../lib/strings';
 import { createBackupFile, shareBackupFile } from '../services/backupFile';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { PasswordField } from './PasswordField';
+import { SegmentedControl } from './SegmentedControl';
+
+const LEVEL_OPTIONS = PROTECTION_LEVELS.map((value) => ({
+  value,
+  label: strings.exportDialog.levels[value],
+}));
 
 type RunAction = (action: () => Promise<unknown>) => Promise<boolean>;
 
@@ -31,6 +43,7 @@ interface PreparedBackup {
  */
 export function ExportBackupDialog({ data, run, onDone, onClose }: ExportBackupDialogProps) {
   const [protect, setProtect] = useState(true);
+  const [level, setLevel] = useState<ProtectionLevel>('full');
   const [password, setPassword] = useState('');
   const [repeated, setRepeated] = useState('');
   const [error, setError] = useState<string>();
@@ -42,9 +55,13 @@ export function ExportBackupDialog({ data, run, onDone, onClose }: ExportBackupD
   const prepare = async (event: FormEvent) => {
     event.preventDefault();
     if (protect) {
-      const passwordError = validateNewPassword(password, repeated);
+      const passwordError = validateNewPassword(password, repeated, level);
       if (passwordError) {
-        setError(strings.errors.password[passwordError]);
+        setError(
+          passwordError === 'tooShort'
+            ? strings.errors.password.tooShort(MIN_PASSWORD_LENGTH[level])
+            : strings.errors.password.mismatch,
+        );
         return;
       }
     }
@@ -120,6 +137,21 @@ export function ExportBackupDialog({ data, run, onDone, onClose }: ExportBackupD
 
         {protect ? (
           <div className="flex animate-fade-in flex-col gap-3">
+            <SegmentedControl
+              legend={strings.exportDialog.level}
+              options={LEVEL_OPTIONS}
+              value={level}
+              onChange={(next) => {
+                setLevel(next);
+                setError(undefined);
+              }}
+            />
+            <p
+              className={`text-sm ${level === 'full' ? 'text-muted' : 'text-danger'}`}
+              aria-live="polite"
+            >
+              {strings.exportDialog.levelHints[level]}
+            </p>
             <PasswordField
               label={strings.exportDialog.password}
               value={password}
@@ -136,7 +168,6 @@ export function ExportBackupDialog({ data, run, onDone, onClose }: ExportBackupD
               invalid={error !== undefined}
               describedBy={error ? errorId : undefined}
             />
-            <p className="text-sm text-muted">{strings.exportDialog.strengthHint}</p>
             <p className="text-sm text-danger">{strings.exportDialog.warning}</p>
           </div>
         ) : (

@@ -7,8 +7,18 @@
 export const ENVELOPE_APP_ID = 'goalhour';
 /** Version of the envelope itself (not of the backup inside it). */
 export const ENVELOPE_VERSION = 1;
-/** Short on purpose (user decision); longer passwords are still recommended in the UI. */
-export const MIN_PASSWORD_LENGTH = 4;
+/**
+ * The user picks how strong the password must be (default "full"). "full" resists targeted guessing of a
+ * stolen file; "basic" only keeps out casual finders. Decryption accepts any length.
+ */
+export type ProtectionLevel = 'full' | 'basic';
+
+export const PROTECTION_LEVELS: readonly ProtectionLevel[] = ['full', 'basic'];
+
+export const MIN_PASSWORD_LENGTH: Record<ProtectionLevel, number> = {
+  full: 8,
+  basic: 4,
+};
 
 /** Current OWASP recommendation for PBKDF2-HMAC-SHA256. */
 const DEFAULT_ITERATIONS = 600_000;
@@ -32,8 +42,12 @@ export type DecryptResult = { ok: true; text: string } | { ok: false; error: Dec
 
 export type PasswordError = 'tooShort' | 'mismatch';
 
-export function validateNewPassword(password: string, repeated: string): PasswordError | null {
-  if (password.length < MIN_PASSWORD_LENGTH) {
+export function validateNewPassword(
+  password: string,
+  repeated: string,
+  level: ProtectionLevel,
+): PasswordError | null {
+  if (password.length < MIN_PASSWORD_LENGTH[level]) {
     return 'tooShort';
   }
   return password === repeated ? null : 'mismatch';

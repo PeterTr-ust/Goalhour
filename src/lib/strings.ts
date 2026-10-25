@@ -1,5 +1,5 @@
 import type { BackupError } from './backup';
-import type { DecryptError, PasswordError } from './backupCrypto';
+import type { DecryptError, PasswordError, ProtectionLevel } from './backupCrypto';
 import type { DurationError } from './duration';
 import type { WeeksOffError } from './plan';
 import { parseMonthKey } from './calendar';
@@ -196,7 +196,13 @@ export const strings = {
     repeat: 'Passwort wiederholen',
     warning:
       'Ohne dieses Passwort lässt sich das Backup nicht wiederherstellen. Bewahre es sicher auf, z. B. in der Passwörter-App.',
-    strengthHint: 'Mindestens 4 Zeichen. Längere Passwörter schützen deutlich besser.',
+    level: 'Schutzstufe',
+    levels: { full: 'Voll', basic: 'Eingeschränkt' } satisfies Record<ProtectionLevel, string>,
+    levelHints: {
+      full: 'Voller Schutz: mindestens 8 Zeichen. Schützt auch, wenn jemand die Datei gezielt knacken will.',
+      basic:
+        'Eingeschränkter Schutz: ab 4 Zeichen. Reicht gegen Zufallsfunde, aber nicht gegen gezielte Versuche.',
+    } satisfies Record<ProtectionLevel, string>,
     unprotectedWarning: 'Ohne Passwort kann jeder, der die Datei hat, deine Einträge lesen.',
     prepare: 'Backup vorbereiten',
     preparing: 'Wird verschlüsselt …',
@@ -239,9 +245,10 @@ export const strings = {
     backupExport: 'Das Backup konnte nicht erstellt werden.',
     backupRead: 'Die Datei konnte nicht gelesen werden.',
     password: {
-      tooShort: 'Das Passwort muss mindestens 4 Zeichen lang sein.',
+      tooShort: (minLength: number) =>
+        `Das Passwort muss mindestens ${minLength} Zeichen lang sein.`,
       mismatch: 'Die Passwörter stimmen nicht überein.',
-    } satisfies Record<PasswordError, string>,
+    } satisfies Record<PasswordError, unknown>,
     decrypt: {
       wrongPassword: 'Falsches Passwort oder beschädigte Datei.',
       invalidEnvelope: 'Die verschlüsselte Datei ist beschädigt oder stammt nicht von Goalhour.',

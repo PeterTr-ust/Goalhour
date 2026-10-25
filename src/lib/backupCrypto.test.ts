@@ -78,10 +78,18 @@ describe('isEncryptedBackup', () => {
 });
 
 describe('validateNewPassword', () => {
-  it('requires 4 characters and a matching repetition', () => {
-    expect(validateNewPassword('abc', 'abc')).toBe('tooShort');
-    expect(validateNewPassword('abcd', 'abcd')).toBeNull();
-    expect(validateNewPassword('lang-genug', 'lang-genuG')).toBe('mismatch');
-    expect(validateNewPassword('lang-genug', 'lang-genug')).toBeNull();
+  it('requires 8 characters for full protection', () => {
+    expect(validateNewPassword('abcdefg', 'abcdefg', 'full')).toBe('tooShort');
+    expect(validateNewPassword('abcdefgh', 'abcdefgh', 'full')).toBeNull();
+  });
+
+  it('requires 4 characters for basic protection', () => {
+    expect(validateNewPassword('abc', 'abc', 'basic')).toBe('tooShort');
+    expect(validateNewPassword('abcd', 'abcd', 'basic')).toBeNull();
+  });
+
+  it('requires a matching repetition', () => {
+    expect(validateNewPassword('lang-genug', 'lang-genuG', 'full')).toBe('mismatch');
+    expect(validateNewPassword('kurz', 'Kurz', 'basic')).toBe('mismatch');
   });
 });
