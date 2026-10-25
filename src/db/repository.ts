@@ -1,5 +1,11 @@
 import { monthKeyOf, nextMonth } from '../lib/calendar';
-import { buildClose, canCarryOver, summarizeMonth, type CloseChoice } from '../lib/month';
+import {
+  buildClose,
+  canCarryOver,
+  carriesIntoNextMonth,
+  summarizeMonth,
+  type CloseChoices,
+} from '../lib/month';
 import type { BackupFile } from '../lib/backup';
 import type { Item, MonthClose, MonthKey } from '../lib/types';
 import { db } from './database';
@@ -105,7 +111,7 @@ export async function markBackupDone(timestamp: number): Promise<void> {
 }
 
 /** Closes a month, computing the adjustment from the current stored data. */
-export async function closeMonth(month: MonthKey, choice: CloseChoice): Promise<MonthClose> {
+export async function closeMonth(month: MonthKey, choices: CloseChoices): Promise<MonthClose> {
   return db.transaction('rw', db.items, db.goals, db.closes, async () => {
     await assertMonthOpen(month);
     const [items, goals, closes] = await Promise.all([
@@ -114,10 +120,9 @@ export async function closeMonth(month: MonthKey, choice: CloseChoice): Promise<
       db.closes.toArray(),
     ]);
     const { entryRaw, creditRaw } = summarizeMonth(month, { items, goals, closes });
-    const close = buildClose(month, entryRaw, creditRaw, choice);
+    const close = buildClose(month, entryRaw, creditRaw, choices);
     // Anything carried into an already closed next month would silently change it.
-    const carriesMinutes = close.mode === 'carryOver' || (close.creditCarry ?? 0) > 0;
-    if (carriesMinutes && !canCarryOver(closes, month)) {
+    if (carriesIntoNextMonth(close) && !canCarryOver(closes, month)) {
       throw new RepositoryError('nextMonthClosed');
     }
     await db.closes.put(close);

@@ -7,9 +7,10 @@ export const BACKUP_APP_ID = 'goalhour';
  * Current format written by the app. Every older version must stay importable.
  * 1: initial format. 2: closes may carry `creditCarry` (credits settled separately).
  * 3: adds `yearPlans` (planned weeks off per service year).
+ * 4: closes may carry `creditRoundUp` (credits rounded up instead of carried over).
  */
-export const BACKUP_FORMAT_VERSION = 3;
-const SUPPORTED_VERSIONS: readonly number[] = [1, 2, 3];
+export const BACKUP_FORMAT_VERSION = 4;
+const SUPPORTED_VERSIONS: readonly number[] = [1, 2, 3, 4];
 export const BACKUP_REMINDER_DAYS = 14;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -132,16 +133,24 @@ function parseClose(value: unknown): MonthClose | null {
   if (!isRecord(value) || !isString(value.month, MONTH_PATTERN)) {
     return null;
   }
-  const { mode, adjustment, creditCarry } = value;
+  const { mode, adjustment, creditCarry, creditRoundUp } = value;
   if (!CLOSE_MODES.includes(mode as CloseMode) || !isMinuteRemainder(adjustment)) {
     return null;
   }
-  const close: MonthClose = { month: value.month, mode: mode as CloseMode, adjustment };
-  // Closes from before the separate credit settlement have no creditCarry and keep it absent.
-  if (creditCarry === undefined) {
-    return close;
+  // Optional fields stay absent when missing, so older closes keep their exact meaning.
+  if (creditCarry !== undefined && !isMinuteRemainder(creditCarry)) {
+    return null;
   }
-  return isMinuteRemainder(creditCarry) ? { ...close, creditCarry } : null;
+  if (creditRoundUp !== undefined && !isMinuteRemainder(creditRoundUp)) {
+    return null;
+  }
+  return {
+    month: value.month,
+    mode: mode as CloseMode,
+    adjustment,
+    ...(creditCarry === undefined ? {} : { creditCarry }),
+    ...(creditRoundUp === undefined ? {} : { creditRoundUp }),
+  };
 }
 
 /** Parses every entry of a list, or returns null if the list or any entry is invalid. */

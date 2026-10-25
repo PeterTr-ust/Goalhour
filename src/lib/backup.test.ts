@@ -22,6 +22,7 @@ const content: BackupContent = {
   closes: [
     { month: '2026-08', mode: 'carryOver', adjustment: 15 },
     { month: '2026-09', mode: 'roundUp', adjustment: 20, creditCarry: 30 },
+    { month: '2026-10', mode: 'none', adjustment: 0, creditCarry: 0, creditRoundUp: 15 },
   ],
 };
 
@@ -34,7 +35,7 @@ describe('createBackup and parseBackup', () => {
     const text = JSON.stringify(createBackup(content, NOW));
     expect(parseBackup(text)).toEqual({
       ok: true,
-      backup: { app: 'goalhour', version: 3, exportedAt: NOW, ...content },
+      backup: { app: 'goalhour', version: 4, exportedAt: NOW, ...content },
     });
   });
 
@@ -64,7 +65,7 @@ describe('createBackup and parseBackup', () => {
   });
 
   it('rejects unknown format versions', () => {
-    expect(roundTrip({ version: 4 })).toEqual({ ok: false, error: 'unsupportedVersion' });
+    expect(roundTrip({ version: 5 })).toEqual({ ok: false, error: 'unsupportedVersion' });
     expect(roundTrip({ version: '2' })).toEqual({ ok: false, error: 'unsupportedVersion' });
   });
 
@@ -93,6 +94,10 @@ describe('createBackup and parseBackup', () => {
     [
       'a negative credit carry',
       { closes: [{ month: '2026-09', mode: 'none', adjustment: 0, creditCarry: -1 }] },
+    ],
+    [
+      'a credit round-up of 60',
+      { closes: [{ month: '2026-09', mode: 'none', adjustment: 0, creditRoundUp: 60 }] },
     ],
     ['52 weeks off', { yearPlans: [{ startYear: 2026, weeksOff: 52 }] }],
     ['fractional weeks off', { yearPlans: [{ startYear: 2026, weeksOff: 2.5 }] }],

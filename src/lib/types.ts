@@ -48,4 +48,9 @@ export interface MonthClose {
    * `adjustment` apply to the combined total, and those totals must stay unchanged.
    */
   creditCarry?: number;
+  /**
+   * Minutes added so that the credits end on a full hour (credit round-up). Only set on
+   * closes where the credits were rounded up; missing everywhere else.
+   */
+  creditRoundUp?: number;
 }

@@ -57,27 +57,28 @@ export function carryInOf(closes: readonly MonthClose[], month: MonthKey): numbe
   return previous?.mode === 'carryOver' ? previous.adjustment : 0;
 }
 
-/** Credit minutes carried into a month automatically from the previous month. */
+/** Credit minutes carried into a month from the previous month. */
 export function creditCarryInOf(closes: readonly MonthClose[], month: MonthKey): number {
   return findClose(closes, previousMonth(month))?.creditCarry ?? 0;
 }
 
 /**
- * Final total of a month. Works for both close formats: older closes have no credit carry,
- * so their adjustment applies to the combined total exactly as before.
+ * Final total of a month. Works for all close formats: the oldest closes have neither credit
+ * carry nor credit round-up, so their adjustment applies to the combined total exactly as
+ * before; closes from the automatic-carry period only have a credit carry.
  */
 export function applyClose(raw: number, close: MonthClose | undefined): number {
   if (close === undefined) {
     return raw;
   }
-  const creditCarry = close.creditCarry ?? 0;
+  const creditTotal = raw - (close.creditCarry ?? 0) + (close.creditRoundUp ?? 0);
   switch (close.mode) {
     case 'roundUp':
-      return raw - creditCarry + close.adjustment;
+      return creditTotal + close.adjustment;
     case 'carryOver':
-      return raw - creditCarry - close.adjustment;
+      return creditTotal - close.adjustment;
     default:
-      return raw - creditCarry;
+      return creditTotal;
   }
 }
 
@@ -112,35 +113,68 @@ export function summarizeMonth(month: MonthKey, data: MonthData): MonthSummary {
 
 export type CloseChoice = Exclude<CloseMode, 'none'>;
 
-/** Minutes that must leave the month so that the credits end on a full hour. */
-export function creditRemainder(creditRaw: number): number {
-  return creditRaw % MINUTES_PER_HOUR;
+/** How the remainders of hours (entries) and credits are settled; chosen independently. */
+export interface CloseChoices {
+  entries: CloseChoice;
+  credits: CloseChoice;
+}
+
+/** Minutes below the next full hour, 0 when the value already ends on a full hour. */
+export function hourRemainder(minutes: number): number {
+  return minutes % MINUTES_PER_HOUR;
+}
+
+function settleEntries(entryRaw: number, choice: CloseChoice) {
+  const remainder = hourRemainder(entryRaw);
+  if (remainder === 0) {
+    return { mode: 'none' as const, adjustment: 0 };
+  }
+  return choice === 'roundUp'
+    ? { mode: 'roundUp' as const, adjustment: MINUTES_PER_HOUR - remainder }
+    : { mode: 'carryOver' as const, adjustment: remainder };
+}
+
+function settleCredits(creditRaw: number, choice: CloseChoice) {
+  const remainder = hourRemainder(creditRaw);
+  if (remainder === 0) {
+    return { creditCarry: 0 };
+  }
+  return choice === 'roundUp'
+    ? { creditCarry: 0, creditRoundUp: MINUTES_PER_HOUR - remainder }
+    : { creditCarry: remainder };
 }
 
 /**
- * Builds the close record. Entries and credits are settled separately: the entry remainder
- * follows the user's choice, the credit remainder is always carried into the next month.
+ * Builds the close record. Hours and credits are settled separately, each by its own choice
+ * to round up to the next full hour or to carry the remainder into the next month.
  */
 export function buildClose(
   month: MonthKey,
   entryRaw: number,
   creditRaw: number,
-  choice: CloseChoice,
+  choices: CloseChoices,
 ): MonthClose {
-  const creditCarry = creditRemainder(creditRaw);
-  const remainder = entryRaw % MINUTES_PER_HOUR;
-  if (remainder === 0) {
-    return { month, mode: 'none', adjustment: 0, creditCarry };
-  }
-  if (choice === 'roundUp') {
-    return { month, mode: 'roundUp', adjustment: MINUTES_PER_HOUR - remainder, creditCarry };
-  }
-  return { month, mode: 'carryOver', adjustment: remainder, creditCarry };
+  return {
+    month,
+    ...settleEntries(entryRaw, choices.entries),
+    ...settleCredits(creditRaw, choices.credits),
+  };
 }
 
-/** The user only has to choose when the entries do not end on a full hour. */
-export function needsCloseChoice(entryRaw: number): boolean {
-  return entryRaw % MINUTES_PER_HOUR !== 0;
+/** Which parts need a decision: only those that do not end on a full hour. */
+export function closeChoicesNeeded(entryRaw: number, creditRaw: number) {
+  return { entries: hourRemainder(entryRaw) !== 0, credits: hourRemainder(creditRaw) !== 0 };
+}
+
+/** True when the user has to decide something; otherwise the month closes right away. */
+export function needsCloseChoice(entryRaw: number, creditRaw: number): boolean {
+  const needed = closeChoicesNeeded(entryRaw, creditRaw);
+  return needed.entries || needed.credits;
+}
+
+/** Whether closing with this record moves any minutes into the next month. */
+export function carriesIntoNextMonth(close: MonthClose): boolean {
+  return close.mode === 'carryOver' || (close.creditCarry ?? 0) > 0;
 }
 
 /**

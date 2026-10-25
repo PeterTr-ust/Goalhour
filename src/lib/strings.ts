@@ -58,8 +58,7 @@ export const strings = {
     carryIn: 'Übertrag aus dem Vormonat',
     creditCarryIn: (month: string) => `davon Übertrag aus ${month}`,
     creditCarryOut: 'Übertrag Gutschrift',
-    creditCarried: (minutes: string, month: string) =>
-      `${minutes} Gutschrift in den ${month} übertragen`,
+    creditRoundUp: 'Aufrundung Gutschrift',
     total: 'Gesamt',
     provisional: 'vorläufig',
     final: 'endgültig',
@@ -86,6 +85,7 @@ export const strings = {
     carryIn: 'Übertrag',
     carryOut: 'Übertrag',
     creditCarry: 'Übertrag Gutschrift',
+    creditRoundUp: 'Aufrundung Gutschrift',
   },
   list: {
     carryInFrom: (month: string) => `aus ${month}`,
@@ -120,17 +120,19 @@ export const strings = {
   },
   closeDialog: {
     title: 'Monat abschließen',
-    description: (entries: string) =>
-      `Die Stunden (${entries}) gehen nicht in vollen Stunden auf. Wie soll der Rest behandelt werden?`,
+    description:
+      'Nicht alles geht in vollen Stunden auf. Wähle für jeden Teil, wie der Rest behandelt wird.',
+    hoursSection: (value: string) => `Stunden ${value}`,
+    creditsSection: (value: string) => `Gutschriften ${value}`,
     roundUp: 'Aufrunden',
     roundUpPreview: (from: string, to: string, added: string) =>
-      `Stunden ${from} werden ${to} (+${added} Aufrundung)`,
+      `${from} wird ${to} (+${added} Aufrundung)`,
     carryOver: 'Übertragen',
     carryOverPreview: (from: string, to: string, rest: string, month: string) =>
-      `Stunden ${from} werden ${to}, ${rest} gehen als Übertrag in den ${month}`,
+      `${from} wird ${to}, ${rest} gehen in den ${month}`,
     monthTotal: (total: string) => `Monat gesamt: ${total}`,
-    creditInfo: (from: string, to: string, rest: string, month: string) =>
-      `Gutschriften ${from} werden ${to}, ${rest} gehen automatisch in den ${month}.`,
+    chooseAll: 'Bitte für jeden Teil eine Option wählen.',
+    confirm: 'Abschließen',
     carryOverBlocked: 'Nicht möglich, weil der Folgemonat bereits abgeschlossen ist.',
   },
   serviceYear: {

@@ -4,9 +4,12 @@ import {
   buildClose,
   canCarryOver,
   canReopen,
+  carriesIntoNextMonth,
+  closeChoicesNeeded,
   needsCloseChoice,
   sortNewestFirst,
   summarizeMonth,
+  type CloseChoice,
   type MonthData,
 } from './month';
 import type { Item, MonthClose } from './types';
@@ -28,17 +31,33 @@ function data(items: Item[], closes: MonthClose[] = []): MonthData {
   return { items, goals: [], closes };
 }
 
-/** Closes the month like the app does: computes the raw totals first, then stores the close. */
-function close(month: string, current: MonthData, choice: 'roundUp' | 'carryOver'): MonthData {
+/**
+ * Closes the month like the app does: computes the raw totals first, then stores the close.
+ * The credit choice defaults to carry-over.
+ */
+function close(
+  month: string,
+  current: MonthData,
+  entries: CloseChoice,
+  credits: CloseChoice = 'carryOver',
+): MonthData {
   const { entryRaw, creditRaw } = summarizeMonth(month, current);
   return {
     ...current,
-    closes: [...current.closes, buildClose(month, entryRaw, creditRaw, choice)],
+    closes: [...current.closes, buildClose(month, entryRaw, creditRaw, { entries, credits })],
   };
 }
 
 function findCloseOf(current: MonthData, month: string): MonthClose | undefined {
   return current.closes.find((c) => c.month === month);
+}
+
+function requireClose(current: MonthData, month: string): MonthClose {
+  const found = findCloseOf(current, month);
+  if (!found) {
+    throw new Error(`No close for ${month}`);
+  }
+  return found;
 }
 
 /** Removes a month's close, like reopening it. */
@@ -79,9 +98,9 @@ describe('closing a month', () => {
   const october = data([item('entry', '2026-10-05', 3000), item('entry', '2026-10-06', 150)]);
 
   it('needs no choice for a whole hour total', () => {
-    expect(needsCloseChoice(3000)).toBe(false);
-    expect(needsCloseChoice(3150)).toBe(true);
-    expect(buildClose('2026-10', 3000, 0, 'roundUp')).toEqual({
+    expect(needsCloseChoice(3000, 0)).toBe(false);
+    expect(needsCloseChoice(3150, 0)).toBe(true);
+    expect(buildClose('2026-10', 3000, 0, { entries: 'roundUp', credits: 'roundUp' })).toEqual({
       month: '2026-10',
       mode: 'none',
       adjustment: 0,
@@ -152,35 +171,67 @@ describe('settling credits separately', () => {
   // Entries 50:20, credits 2:30.
   const october = data([item('entry', '2026-10-05', 3020), item('credit', '2026-10-06', 150)]);
 
-  it('asks only about the entry remainder', () => {
+  it('asks about both remainders', () => {
     const summary = summarizeMonth('2026-10', october);
     expect(summary.entryRaw).toBe(3020);
     expect(summary.creditRaw).toBe(150);
-    expect(needsCloseChoice(summary.entryRaw)).toBe(true);
+    expect(closeChoicesNeeded(summary.entryRaw, summary.creditRaw)).toEqual({
+      entries: true,
+      credits: true,
+    });
+    expect(needsCloseChoice(summary.entryRaw, summary.creditRaw)).toBe(true);
   });
 
-  it('rounds up the entries and carries the credit remainder automatically', () => {
-    const closed = close('2026-10', october, 'roundUp');
+  it('asks only about the part that does not end on a full hour', () => {
+    expect(closeChoicesNeeded(3000, 150)).toEqual({ entries: false, credits: true });
+    expect(closeChoicesNeeded(3020, 120)).toEqual({ entries: true, credits: false });
+    expect(needsCloseChoice(3000, 120)).toBe(false);
+  });
+
+  it('rounds up the hours and carries the credits over', () => {
+    const closed = close('2026-10', october, 'roundUp', 'carryOver');
     expect(findCloseOf(closed, '2026-10')).toEqual({
       month: '2026-10',
       mode: 'roundUp',
       adjustment: 40,
       creditCarry: 30,
     });
-    // 51:00 entries + 2:00 credits
+    // 51:00 hours + 2:00 credits
     expect(formatDuration(summarizeMonth('2026-10', closed).total)).toBe('53:00');
 
     const november = summarizeMonth('2026-11', closed);
     expect(november.carryIn).toBe(0);
     expect(formatDuration(november.creditCarryIn)).toBe('0:30');
-    expect(november.creditRaw).toBe(30);
     expect(formatDuration(november.total)).toBe('0:30');
   });
 
-  it('carries both remainders separately when carrying over', () => {
-    const closed = close('2026-10', october, 'carryOver');
-    // 50:00 entries + 2:00 credits
+  it('rounds up the credits like the hours (2:30 -> 3:00)', () => {
+    const closed = close('2026-10', october, 'carryOver', 'roundUp');
+    expect(findCloseOf(closed, '2026-10')).toEqual({
+      month: '2026-10',
+      mode: 'carryOver',
+      adjustment: 20,
+      creditCarry: 0,
+      creditRoundUp: 30,
+    });
+    // 50:00 hours + 3:00 credits
+    expect(formatDuration(summarizeMonth('2026-10', closed).total)).toBe('53:00');
+    const november = summarizeMonth('2026-11', closed);
+    expect(november.carryIn).toBe(20);
+    expect(november.creditCarryIn).toBe(0);
+  });
+
+  it('rounds up both', () => {
+    const closed = close('2026-10', october, 'roundUp', 'roundUp');
+    expect(formatDuration(summarizeMonth('2026-10', closed).total)).toBe('54:00');
+    expect(carriesIntoNextMonth(requireClose(closed, '2026-10'))).toBe(false);
+  });
+
+  it('carries both remainders separately', () => {
+    const closed = close('2026-10', october, 'carryOver', 'carryOver');
+    // 50:00 hours + 2:00 credits
     expect(formatDuration(summarizeMonth('2026-10', closed).total)).toBe('52:00');
+    expect(carriesIntoNextMonth(requireClose(closed, '2026-10'))).toBe(true);
 
     const november = summarizeMonth('2026-11', closed);
     expect(formatDuration(november.carryIn)).toBe('0:20');
@@ -188,24 +239,20 @@ describe('settling credits separately', () => {
     expect(formatDuration(november.total)).toBe('0:50');
   });
 
-  it('closes without a choice when only the credits have a remainder', () => {
-    const creditsOnly = data([
-      item('entry', '2026-10-05', 3000),
-      item('credit', '2026-10-06', 150),
-    ]);
-    const summary = summarizeMonth('2026-10', creditsOnly);
-    expect(needsCloseChoice(summary.entryRaw)).toBe(false);
-
-    const closed = close('2026-10', creditsOnly, 'roundUp');
-    expect(findCloseOf(closed, '2026-10')?.mode).toBe('none');
-    expect(formatDuration(summarizeMonth('2026-10', closed).total)).toBe('52:00');
-    expect(summarizeMonth('2026-11', closed).creditCarryIn).toBe(30);
-  });
-
-  it('never rounds up credits, even with a round-up choice', () => {
-    const closed = close('2026-10', data([item('credit', '2026-10-06', 170)]), 'roundUp');
+  it('ignores the credit choice when the credits end on a full hour', () => {
+    const closed = close(
+      '2026-10',
+      data([item('credit', '2026-10-06', 120)]),
+      'roundUp',
+      'roundUp',
+    );
+    expect(findCloseOf(closed, '2026-10')).toEqual({
+      month: '2026-10',
+      mode: 'none',
+      adjustment: 0,
+      creditCarry: 0,
+    });
     expect(summarizeMonth('2026-10', closed).total).toBe(120);
-    expect(summarizeMonth('2026-11', closed).creditCarryIn).toBe(50);
   });
 
   it('chains credit carry-overs and adds them to the next credits', () => {
@@ -219,16 +266,43 @@ describe('settling credits separately', () => {
     expect(summarizeMonth('2026-12', state).creditCarryIn).toBe(15);
   });
 
+  it('rounds up credits that include a carry-in', () => {
+    let state = data([item('credit', '2026-10-06', 150), item('credit', '2026-11-06', 45)]);
+    state = close('2026-10', state, 'roundUp', 'carryOver');
+    // November: 0:45 + 0:30 carried = 1:15, rounded up to 2:00.
+    state = close('2026-11', state, 'roundUp', 'roundUp');
+    expect(summarizeMonth('2026-11', state).total).toBe(120);
+    expect(summarizeMonth('2026-12', state).creditCarryIn).toBe(0);
+  });
+
   it('carries credits across the service year boundary (August to September)', () => {
     const state = close('2026-08', data([item('credit', '2026-08-31', 100)]), 'roundUp');
     expect(summarizeMonth('2026-08', state).total).toBe(60);
     expect(summarizeMonth('2026-09', state).creditCarryIn).toBe(40);
   });
 
-  it('removes the credit carry-over when the month is reopened', () => {
-    const reopened = reopen('2026-10', close('2026-10', october, 'roundUp'));
-    expect(summarizeMonth('2026-11', reopened).creditCarryIn).toBe(0);
-    expect(summarizeMonth('2026-10', reopened).total).toBe(3170);
+  it('drops credit carry-over and credit round-up when the month is reopened', () => {
+    const carried = reopen('2026-10', close('2026-10', october, 'roundUp', 'carryOver'));
+    expect(summarizeMonth('2026-11', carried).creditCarryIn).toBe(0);
+    expect(summarizeMonth('2026-10', carried).total).toBe(3170);
+    const rounded = reopen('2026-10', close('2026-10', october, 'roundUp', 'roundUp'));
+    expect(summarizeMonth('2026-10', rounded).total).toBe(3170);
+  });
+
+  it('keeps closes from the automatic credit carry period unchanged', () => {
+    // Closed while credit remainders were always carried: only creditCarry, no round-up.
+    const automatic: MonthClose = {
+      month: '2026-10',
+      mode: 'roundUp',
+      adjustment: 40,
+      creditCarry: 30,
+    };
+    const state = data(
+      [item('entry', '2026-10-05', 3020), item('credit', '2026-10-06', 150)],
+      [automatic],
+    );
+    expect(summarizeMonth('2026-10', state).total).toBe(3180);
+    expect(summarizeMonth('2026-11', state).creditCarryIn).toBe(30);
   });
 
   it('keeps older combined closes unchanged next to new ones', () => {
@@ -243,13 +317,12 @@ describe('settling credits separately', () => {
       [legacy],
     );
     expect(summarizeMonth('2026-09', state).total).toBe(3120);
-    // The old carry-over counts on the entry side.
+    // The old carry-over counts on the hours side.
     expect(summarizeMonth('2026-10', state).carryIn).toBe(30);
 
-    state = close('2026-10', state, 'carryOver');
-    const october = summarizeMonth('2026-10', state);
-    // Entries 0:30 carried on, credits 0:50 carried on: nothing left in October.
-    expect(october.total).toBe(0);
+    state = close('2026-10', state, 'carryOver', 'carryOver');
+    // Hours 0:30 carried on, credits 0:50 carried on: nothing left in October.
+    expect(summarizeMonth('2026-10', state).total).toBe(0);
     expect(summarizeMonth('2026-11', state).carryIn).toBe(30);
     expect(summarizeMonth('2026-11', state).creditCarryIn).toBe(50);
   });

@@ -28,6 +28,39 @@ const BACKUP_V1_COMBINED_SETTLEMENT = `{
   ]
 }`;
 
+/** Format version 4: credits may be rounded up (`creditRoundUp`) instead of carried over. */
+const BACKUP_V4_CREDIT_ROUND_UP = `{
+  "app": "goalhour",
+  "version": 4,
+  "exportedAt": 1793300000000,
+  "items": [
+    { "id": "s1", "type": "entry", "date": "2026-09-05", "minutes": 3020, "createdAt": 1 },
+    { "id": "s2", "type": "credit", "date": "2026-09-20", "minutes": 150, "createdAt": 2 },
+    { "id": "o1", "type": "credit", "date": "2026-10-03", "minutes": 45, "createdAt": 3 }
+  ],
+  "goals": [],
+  "yearGoals": [],
+  "yearPlans": [],
+  "closes": [
+    { "month": "2026-09", "mode": "carryOver", "adjustment": 20, "creditCarry": 0, "creditRoundUp": 30 }
+  ]
+}`;
+
+describe('backup format version 4 (credit round-up)', () => {
+  it('keeps the credit round-up and the hours carry-over', () => {
+    const result = parseBackup(BACKUP_V4_CREDIT_ROUND_UP);
+    if (!result.ok) {
+      throw new Error(`Backup no longer parses: ${result.error}`);
+    }
+    // September: hours 50:20 -> 50:00 (0:20 carried), credits 2:30 rounded up to 3:00.
+    expect(summarizeMonth('2026-09', result.backup).total).toBe(3180);
+    const october = summarizeMonth('2026-10', result.backup);
+    expect(october.carryIn).toBe(20);
+    expect(october.creditCarryIn).toBe(0);
+    expect(october.total).toBe(65);
+  });
+});
+
 /** Format version 3: adds planned weeks off per service year. */
 const BACKUP_V3_YEAR_PLANS = `{
   "app": "goalhour",

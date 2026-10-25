@@ -17,11 +17,14 @@ function rowsFor(month: string, data: MonthData) {
   return buildListRows(summarizeMonth(month, data), data.items);
 }
 
-function closedOctober(choice: 'roundUp' | 'carryOver'): MonthData {
+function closedOctober(
+  choice: 'roundUp' | 'carryOver',
+  credits: 'roundUp' | 'carryOver' = 'carryOver',
+): MonthData {
   return {
     items,
     goals: [],
-    closes: [buildClose('2026-10', OCTOBER_ENTRIES, OCTOBER_CREDITS, choice)],
+    closes: [buildClose('2026-10', OCTOBER_ENTRIES, OCTOBER_CREDITS, { entries: choice, credits })],
   };
 }
 
@@ -38,6 +41,13 @@ describe('buildListRows', () => {
     expect(kinds(rows)).toEqual(['roundUp', 'creditCarryOut', 'd', 'b', 'a']);
     expect(rows[0]).toEqual({ kind: 'roundUp', minutes: 15 });
     expect(rows[1]).toEqual({ kind: 'creditCarryOut', minutes: 40, toMonth: '2026-11' });
+  });
+
+  it('adds a credit round-up row when the credits are rounded up', () => {
+    const rows = rowsFor('2026-10', closedOctober('roundUp', 'roundUp'));
+    expect(kinds(rows)).toEqual(['roundUp', 'creditRoundUp', 'd', 'b', 'a']);
+    expect(rows[1]).toEqual({ kind: 'creditRoundUp', minutes: 20 });
+    expect(kinds(rowsFor('2026-11', closedOctober('roundUp', 'roundUp')))).toEqual(['c']);
   });
 
   it('adds both carry-out rows when carrying over', () => {
