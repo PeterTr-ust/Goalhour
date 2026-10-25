@@ -1,6 +1,7 @@
 import { backupFileName } from '../lib/backup';
 
-const JSON_MIME_TYPE = 'application/json';
+// A generic binary type keeps iOS from renaming the file to ".json" when saving it.
+const BACKUP_MIME_TYPE = 'application/octet-stream';
 
 export type ExportOutcome = 'shared' | 'downloaded' | 'cancelled';
 
@@ -18,7 +19,7 @@ function download(file: File): void {
 }
 
 export function createBackupFile(text: string, now: Date): File {
-  return new File([text], backupFileName(now), { type: JSON_MIME_TYPE });
+  return new File([text], backupFileName(now), { type: BACKUP_MIME_TYPE });
 }
 
 /**

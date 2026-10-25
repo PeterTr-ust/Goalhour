@@ -142,10 +142,13 @@ export function SettingsSheet({
           <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
             {strings.settings.restoreBackup}
           </Button>
+          {/*
+            No accept filter: iOS does not know the ".goalhour" extension and would grey such
+            files out. Any file can be chosen; its content is validated before anything happens.
+          */}
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/json,.json"
             onChange={(event) => void handleFileChosen(event)}
             className="sr-only"
             tabIndex={-1}

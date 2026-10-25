@@ -119,7 +119,7 @@ describe('createBackup and parseBackup', () => {
 
 describe('backupFileName', () => {
   it('contains the local date', () => {
-    expect(backupFileName(new Date(2026, 9, 4))).toBe('goalhour-backup-2026-10-04.json');
+    expect(backupFileName(new Date(2026, 9, 4))).toBe('goalhour-backup-2026-10-04.goalhour');
   });
 });
 

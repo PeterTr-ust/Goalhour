@@ -47,10 +47,16 @@ export function createBackup(content: BackupContent, now: number): BackupFile {
   };
 }
 
+/**
+ * Own extension so backups are recognisable and not opened by other apps; the content is
+ * still JSON. Older backups ending in ".json" are imported the same way.
+ */
+export const BACKUP_FILE_EXTENSION = '.goalhour';
+
 export function backupFileName(now: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  return `goalhour-backup-${date}.json`;
+  return `goalhour-backup-${date}${BACKUP_FILE_EXTENSION}`;
 }
 
 export type BackupError = 'invalidJson' | 'notABackup' | 'unsupportedVersion' | 'invalidData';
