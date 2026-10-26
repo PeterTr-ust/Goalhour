@@ -1,13 +1,11 @@
 # Goalhour
 
-Stunden und Gutschriften erfassen, pro Monat abrechnen und mit Monats- und Jahreszielen vergleichen. Läuft als Web-App auf dem iPhone, alle Daten bleiben auf dem Gerät.
-
-**App:** https://petertr-ust.github.io/Goalhour/
+Track hours and credits, settle them per month and compare them with monthly and yearly goals. Runs as a web app on the iPhone; all data stays on the device.
 
 <p>
-  <img src="docs/screenshots/month.png" alt="Monatsansicht" width="260" />
-  <img src="docs/screenshots/close-month.png" alt="Monat abschließen" width="260" />
-  <img src="docs/screenshots/service-year.png" alt="Dienstjahr im dunklen Modus" width="260" />
+  <img src="docs/screenshots/month.png" alt="Month view" width="260" />
+  <img src="docs/screenshots/close-month.png" alt="Closing a month" width="260" />
+  <img src="docs/screenshots/service-year.png" alt="Service year in dark mode" width="260" />
 </p>
 
-Privates Projekt, ohne Gewähr.
+Private project, provided as is.
