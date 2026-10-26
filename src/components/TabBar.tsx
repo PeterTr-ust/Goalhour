@@ -17,17 +17,18 @@ interface TabBarProps {
 }
 
 /**
- * Bottom navigation. The add button sits inside the bar (not floating above the content),
- * so it can never cover list text. The bar reaches slightly into the home indicator area,
- * like native iOS tab bars, instead of adding the full safe-area inset below it.
+ * Bottom navigation as a floating, rounded bar just above the home indicator. Its content is
+ * centered in the visible bar (a full-width bar looks off-center on iPhones, because the
+ * area below its content is reserved for the home indicator). The add button sits inside the
+ * bar, so it can never cover list text.
  */
 export function TabBar({ active, onChange, onAdd }: TabBarProps) {
   return (
     <nav
       aria-label={strings.tabs.label}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/85 pb-[max(0.375rem,calc(env(safe-area-inset-bottom)-0.75rem))] backdrop-blur-xl"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(0.75rem,calc(env(safe-area-inset-bottom)-0.5rem))]"
     >
-      <div className="mx-auto grid max-w-xl grid-cols-[1fr_5rem_1fr] items-center px-2">
+      <div className="pointer-events-auto mx-auto grid h-16 max-w-md grid-cols-[1fr_4.5rem_1fr] items-center rounded-full border border-line bg-bg/85 px-2 shadow-lg backdrop-blur-xl">
         <TabButton tab="month" active={active} onChange={onChange} />
         <div className="flex justify-center">
           {onAdd && (
@@ -60,7 +61,7 @@ function TabButton({ tab, active, onChange }: TabButtonProps) {
       type="button"
       aria-current={isActive ? 'page' : undefined}
       onClick={() => onChange(tab)}
-      className={`flex min-h-13 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
+      className={`flex h-full flex-col items-center justify-center gap-0.5 rounded-full text-xs font-medium transition-colors ${
         isActive ? 'text-fg' : 'text-muted'
       }`}
     >

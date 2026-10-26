@@ -13,7 +13,7 @@ export function Toast({ toast }: ToastProps) {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 bottom-[calc(max(0.375rem,calc(env(safe-area-inset-bottom)-0.75rem))+4.25rem)] z-30 mx-auto flex max-w-md animate-fade-up items-center gap-3 rounded-2xl bg-fg py-2 pr-2 pl-4 text-bg shadow-xl"
+      className="fixed inset-x-4 bottom-[calc(max(0.75rem,calc(env(safe-area-inset-bottom)-0.5rem))+4.5rem)] z-30 mx-auto flex max-w-md animate-fade-up items-center gap-3 rounded-2xl bg-fg py-2 pr-2 pl-4 text-bg shadow-xl"
     >
       <p className="min-w-0 flex-1 text-sm font-medium">{toast.text}</p>
       {toast.action && (
