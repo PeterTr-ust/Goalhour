@@ -8,4 +8,4 @@ Track hours and credits, settle them per month and compare them with monthly and
   <img src="docs/screenshots/service-year.png" alt="Service year in dark mode" width="260" />
 </p>
 
-Private project, provided as is.
+Private project, provided as is. Free for noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE.md).
