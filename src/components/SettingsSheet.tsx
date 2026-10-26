@@ -161,6 +161,20 @@ export function SettingsSheet({
           )}
         </section>
 
+        <section
+          aria-labelledby="about-title"
+          className="flex flex-col gap-2 rounded-2xl bg-surface p-4"
+        >
+          <h3 id="about-title" className="text-sm font-semibold">
+            {strings.settings.aboutTitle}
+          </h3>
+          {strings.settings.about.map((paragraph) => (
+            <p key={paragraph} className="text-sm text-muted">
+              {paragraph}
+            </p>
+          ))}
+        </section>
+
         <Button variant="secondary" onClick={onClose}>
           {strings.settings.close}
         </Button>

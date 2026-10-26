@@ -184,6 +184,12 @@ export const strings = {
     backupDone: 'Backup erstellt.',
     restoreDone: 'Backup wiederhergestellt.',
     close: 'Fertig',
+    aboutTitle: 'Über Goalhour',
+    about: [
+      'Goalhour ist ein privates Projekt: ein kleines, nicht-kommerzielles Hilfsmittel für mich und meine Freunde.',
+      'Keine Anmeldung, keine Werbung, kein Tracking. Alle Einträge bleiben ausschließlich auf deinem Gerät.',
+      'Die Nutzung erfolgt ohne Gewähr. Sichere deine Daten regelmäßig mit einem Backup.',
+    ],
   },
   exportDialog: {
     title: 'Backup erstellen',
